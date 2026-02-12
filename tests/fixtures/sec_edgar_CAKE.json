@@ -1,0 +1,45 @@
+{
+    "hits": {
+        "hits": [
+            {
+                "_source": {
+                    "file_date": "2026-02-10",
+                    "display_names": [
+                        "The Cheesecake Factory Inc"
+                    ],
+                    "form_type": "10-K",
+                    "file_description": "Annual Report",
+                    "file_url": "https://www.sec.gov/Archives/edgar/data/887596/000088759626000012/cake-20251231.htm",
+                    "period_of_report": "2025-12-31"
+                }
+            },
+            {
+                "_source": {
+                    "file_date": "2026-01-28",
+                    "display_names": [
+                        "The Cheesecake Factory Inc"
+                    ],
+                    "form_type": "8-K",
+                    "file_description": "Current Report",
+                    "file_url": "https://www.sec.gov/Archives/edgar/data/887596/000088759626000010/cake-20260128.htm",
+                    "period_of_report": "2026-01-28"
+                }
+            },
+            {
+                "_source": {
+                    "file_date": "2026-01-15",
+                    "display_names": [
+                        "The Cheesecake Factory Inc"
+                    ],
+                    "form_type": "4",
+                    "file_description": "Statement of Changes in Beneficial Ownership",
+                    "file_url": "https://www.sec.gov/Archives/edgar/data/887596/000088759626000008/xslF345X02/primary_doc.xml",
+                    "period_of_report": "2026-01-14"
+                }
+            }
+        ],
+        "total": {
+            "value": 3
+        }
+    }
+}

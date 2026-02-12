@@ -1,0 +1,50 @@
+{
+    "kind": "Listing",
+    "data": {
+        "after": "t3_abc789",
+        "children": [
+            {
+                "kind": "t3",
+                "data": {
+                    "title": "CAKE just crushed earnings — $1.23 vs $1.10 expected 🚀",
+                    "selftext": "Cheesecake Factory just beat earnings by 12%. Revenue up 8% YoY at $923M. New restaurant openings accelerating. This stock has been quietly outperforming the sector. Anyone else holding?",
+                    "author": "value_investor_42",
+                    "score": 847,
+                    "num_comments": 234,
+                    "created_utc": 1739368200.0,
+                    "subreddit": "stocks",
+                    "permalink": "/r/stocks/comments/abc123/cake_just_crushed_earnings/",
+                    "url": "https://www.reddit.com/r/stocks/comments/abc123/cake_just_crushed_earnings/"
+                }
+            },
+            {
+                "kind": "t3",
+                "data": {
+                    "title": "Deep dive: Why casual dining stocks (CAKE, DRI) are undervalued",
+                    "selftext": "I've been analyzing the casual dining sector and I think CAKE is significantly undervalued. P/E of 14 vs industry average of 18. Strong management team. Expanding internationally. Here's my full analysis...",
+                    "author": "fundamental_analysis",
+                    "score": 312,
+                    "num_comments": 89,
+                    "created_utc": 1739281800.0,
+                    "subreddit": "stocks",
+                    "permalink": "/r/stocks/comments/def456/deep_dive_casual_dining/",
+                    "url": "https://www.reddit.com/r/stocks/comments/def456/deep_dive_casual_dining/"
+                }
+            },
+            {
+                "kind": "t3",
+                "data": {
+                    "title": "Sold my CAKE position today — here's why",
+                    "selftext": "After the run-up I'm taking profits. Great company but I think the valuation is getting stretched after the earnings beat. Will look to re-enter on a pullback.",
+                    "author": "swing_trader_pro",
+                    "score": 156,
+                    "num_comments": 67,
+                    "created_utc": 1739195400.0,
+                    "subreddit": "wallstreetbets",
+                    "permalink": "/r/wallstreetbets/comments/ghi789/sold_my_cake_position/",
+                    "url": "https://www.reddit.com/r/wallstreetbets/comments/ghi789/sold_my_cake_position/"
+                }
+            }
+        ]
+    }
+}

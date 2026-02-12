@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>CAKE - Google News</title>
+    <link>https://news.google.com</link>
+    <description>Google News results for CAKE stock</description>
+    <item>
+      <title>Cheesecake Factory Reports Strong Q4 Earnings, Beats Estimates</title>
+      <link>https://example.com/article1</link>
+      <pubDate>Wed, 12 Feb 2026 14:30:00 GMT</pubDate>
+      <description>The Cheesecake Factory (NASDAQ: CAKE) reported Q4 earnings of $1.23 per share, beating analyst estimates of $1.10. Revenue came in at $923 million, up 8% year-over-year.</description>
+      <source url="https://example.com">Financial Times</source>
+    </item>
+    <item>
+      <title>CAKE Stock Surges After Menu Expansion Announcement</title>
+      <link>https://example.com/article2</link>
+      <pubDate>Tue, 11 Feb 2026 09:15:00 GMT</pubDate>
+      <description>Shares of The Cheesecake Factory rose 4.2% following the company's announcement of 15 new restaurant locations planned for 2026.</description>
+      <source url="https://example.com">Bloomberg</source>
+    </item>
+    <item>
+      <title>Restaurant Industry Outlook 2026: Analysts Weigh In</title>
+      <link>https://example.com/article3</link>
+      <pubDate>Mon, 10 Feb 2026 16:00:00 GMT</pubDate>
+      <description>Industry analysts remain bullish on casual dining stocks including CAKE, DRI, and EAT as consumer spending shows resilience despite inflation concerns.</description>
+      <source url="https://example.com">Reuters</source>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,38 @@
+spec:
+  name: research-assistant
+  region: nyc
+
+  workers:
+    - name: agent
+      dockerfile_path: Dockerfile
+      github:
+        repo: Rogue-Iteration/openclaw-do-gradient
+        branch: main
+        deploy_on_push: true
+      instance_size_slug: apps-s-1vcpu-1gb
+      instance_count: 1
+      envs:
+        - key: GRADIENT_API_KEY
+          scope: RUN_TIME
+          type: SECRET
+        - key: DO_API_TOKEN
+          scope: RUN_TIME
+          type: SECRET
+        - key: DO_SPACES_ACCESS_KEY
+          scope: RUN_TIME
+          type: SECRET
+        - key: DO_SPACES_SECRET_KEY
+          scope: RUN_TIME
+          type: SECRET
+        - key: DO_SPACES_ENDPOINT
+          scope: RUN_TIME
+          value: "https://nyc3.digitaloceanspaces.com"
+        - key: DO_SPACES_BUCKET
+          scope: RUN_TIME
+          value: "openclaw-research"
+        - key: GRADIENT_KB_UUID
+          scope: RUN_TIME
+          type: SECRET
+        - key: OPENCLAW_CMD
+          scope: RUN_TIME
+          value: "clawd start"
