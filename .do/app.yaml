@@ -23,6 +23,9 @@ workers:
       - key: TELEGRAM_BOT_TOKEN
         scope: RUN_TIME
         type: SECRET
+      - key: TELEGRAM_ALLOWED_IDS
+        scope: RUN_TIME
+        type: SECRET
       - key: STABLE_HOSTNAME
         scope: RUN_TIME
         value: openclaw-research
