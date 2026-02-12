@@ -20,7 +20,8 @@ if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
           CREDS_DIR="${OPENCLAW_STATE_DIR:-/data/.openclaw}/credentials"
           mkdir -p "$CREDS_DIR"
           ALLOW_FILE="$CREDS_DIR/telegram-allowFrom.json"
-          echo "$TELEGRAM_ALLOWED_IDS" | tr ',' '\n' | jq -R . | jq -s '.' > "$ALLOW_FILE"
+          # Build correct format: {"version":1,"allowFrom":["id1","id2"]}
+          echo "$TELEGRAM_ALLOWED_IDS" | tr ',' '\n' | jq -R . | jq -s '{version:1,allowFrom:.}' > "$ALLOW_FILE"
           chown openclaw:openclaw "$ALLOW_FILE"
           echo "[openclaw-post] Telegram allowlist seeded: $TELEGRAM_ALLOWED_IDS"
         fi
