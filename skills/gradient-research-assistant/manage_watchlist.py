@@ -8,8 +8,11 @@ global settings, and display of effective rules.
 All changes are persisted to watchlist.json and take effect on the
 next heartbeat cycle.
 
-Persistence is handled by Restic (backs up the workspace directory
-automatically every 30s), so this module only does local file I/O.
+Storage backends:
+- Local file (default, for development/testing)
+- DO Spaces (for App Platform, where filesystem is ephemeral)
+
+Set DO_SPACES_* env vars to enable Spaces-backed persistence.
 
 Usage (called by OpenClaw):
     python3 manage_watchlist.py --add TICKER --name "Company Name"
@@ -43,32 +46,110 @@ VALID_GLOBALS = {"significance_threshold", "cheap_model", "strong_model"}
 # Default path to watchlist.json (sibling of this script)
 DEFAULT_WATCHLIST_PATH = str(Path(__file__).parent / "watchlist.json")
 
+# Spaces key for persistent config storage
+SPACES_CONFIG_KEY = "config/watchlist.json"
 
 
-def load_watchlist(filepath: str = DEFAULT_WATCHLIST_PATH) -> dict:
-    """Load watchlist from local JSON file.
+# ─── Spaces-backed Config Store ──────────────────────────────────
+
+
+def _get_spaces_client():
+    """Create an S3-compatible client for DO Spaces, or None if not configured."""
+    import boto3
+    from botocore.config import Config
+
+    access_key = os.environ.get("DO_SPACES_ACCESS_KEY", "")
+    secret_key = os.environ.get("DO_SPACES_SECRET_KEY", "")
+    endpoint = os.environ.get("DO_SPACES_ENDPOINT", "")
+
+    if not all([access_key, secret_key, endpoint]):
+        return None
+
+    return boto3.client(
+        "s3",
+        endpoint_url=endpoint,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        config=Config(signature_version="s3v4"),
+    )
+
+
+def _spaces_enabled() -> bool:
+    """Check if DO Spaces is configured for config persistence."""
+    return bool(
+        os.environ.get("DO_SPACES_ACCESS_KEY")
+        and os.environ.get("DO_SPACES_SECRET_KEY")
+        and os.environ.get("DO_SPACES_ENDPOINT")
+        and os.environ.get("DO_SPACES_BUCKET")
+    )
+
+
+def load_watchlist(filepath: str = DEFAULT_WATCHLIST_PATH, client=None) -> dict:
+    """Load watchlist from Spaces (if configured) or local file.
+
+    Priority:
+    1. DO Spaces (if env vars set or client provided) — for App Platform
+    2. Local file — for development/testing
 
     Args:
-        filepath: Path to watchlist.json
+        filepath: Path to local watchlist.json (fallback)
+        client: Pre-configured S3 client (optional, for testing)
 
     Raises:
-        FileNotFoundError: If the file doesn't exist.
+        FileNotFoundError: If local file doesn't exist and Spaces not configured.
         json.JSONDecodeError: If the content is invalid JSON.
     """
+    if client is not None or _spaces_enabled():
+        try:
+            if client is None:
+                client = _get_spaces_client()
+            bucket = os.environ["DO_SPACES_BUCKET"]
+            obj = client.get_object(Bucket=bucket, Key=SPACES_CONFIG_KEY)
+            return json.loads(obj["Body"].read().decode("utf-8"))
+        except Exception as e:
+            # NoSuchKey or other error — fall through to local file
+            error_code = getattr(e, "response", {}).get("Error", {}).get("Code", "")
+            if error_code != "NoSuchKey":
+                # Unexpected error, still fall through but could log
+                pass
+
     with open(filepath, "r") as f:
         return json.load(f)
 
 
-def save_watchlist(watchlist: dict, filepath: str = DEFAULT_WATCHLIST_PATH) -> None:
-    """Save watchlist to local JSON file.
+def save_watchlist(watchlist: dict, filepath: str = DEFAULT_WATCHLIST_PATH, client=None) -> None:
+    """Save watchlist to Spaces (if configured) AND local file.
+
+    Writes to both locations so the local file stays in sync for
+    the current process, and Spaces provides persistence across deploys.
 
     Args:
         watchlist: The watchlist dict to save
-        filepath: Path to watchlist.json
+        filepath: Path to local watchlist.json
+        client: Pre-configured S3 client (optional, for testing)
     """
     content = json.dumps(watchlist, indent=2) + "\n"
+
+    # Always save locally (for current process)
     with open(filepath, "w") as f:
         f.write(content)
+
+    # Also save to Spaces if configured (for persistence)
+    if client is not None or _spaces_enabled():
+        try:
+            if client is None:
+                client = _get_spaces_client()
+            bucket = os.environ["DO_SPACES_BUCKET"]
+            client.put_object(
+                Bucket=bucket,
+                Key=SPACES_CONFIG_KEY,
+                Body=content.encode("utf-8"),
+                ContentType="application/json",
+                ACL="private",
+            )
+        except Exception:
+            # Spaces write failed — local file is still updated
+            pass
 
 
 def _normalize_symbol(symbol: str) -> str:

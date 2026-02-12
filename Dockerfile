@@ -6,7 +6,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG TARGETARCH=amd64
 ARG OPENCLAW_VERSION=2026.2.9
 ARG S6_OVERLAY_VERSION=3.2.1.0
-ARG RESTIC_VERSION=0.17.3
 ARG YQ_VERSION=4.44.3
 ARG OPENCLAW_STATE_DIR=/data/.openclaw
 ARG OPENCLAW_WORKSPACE_DIR=/data/workspace
@@ -43,13 +42,6 @@ RUN set -eux; \
   python3 \
   python3-pip \
   python3-venv; \
-  # Install restic
-  RESTIC_ARCH="$( [ "$TARGETARCH" = "arm64" ] && echo arm64 || echo amd64 )"; \
-  wget -q -O /tmp/restic.bz2 \
-  https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${RESTIC_ARCH}.bz2; \
-  bunzip2 /tmp/restic.bz2; \
-  mv /tmp/restic /usr/local/bin/restic; \
-  chmod +x /usr/local/bin/restic; \
   # Install yq for YAML parsing
   YQ_ARCH="$( [ "$TARGETARCH" = "arm64" ] && echo arm64 || echo amd64 )"; \
   wget -q -O /usr/local/bin/yq \

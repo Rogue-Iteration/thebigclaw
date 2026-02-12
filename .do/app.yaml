@@ -41,28 +41,6 @@ workers:
         value: "false"
 
       # ============================================================
-      # SPACES PERSISTENCE (Restic backup)
-      # ============================================================
-      - key: ENABLE_SPACES
-        scope: RUN_TIME
-        value: "true"
-      - key: RESTIC_SPACES_ACCESS_KEY_ID
-        scope: RUN_TIME
-        type: SECRET
-      - key: RESTIC_SPACES_SECRET_ACCESS_KEY
-        scope: RUN_TIME
-        type: SECRET
-      - key: RESTIC_SPACES_ENDPOINT
-        scope: RUN_TIME
-        value: nyc3.digitaloceanspaces.com
-      - key: RESTIC_SPACES_BUCKET
-        scope: RUN_TIME
-        value: openclaw-research
-      - key: RESTIC_PASSWORD
-        scope: RUN_TIME
-        type: SECRET
-
-      # ============================================================
       # RESEARCH SKILL — Gradient AI Knowledge Base + Spaces storage
       # ============================================================
       - key: DO_API_TOKEN
