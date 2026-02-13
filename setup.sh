@@ -39,6 +39,12 @@ if ! id "$OPENCLAW_USER" &>/dev/null; then
   useradd -m -s /bin/bash "$OPENCLAW_USER"
 fi
 
+# Ensure exec tool subprocesses get env vars
+if ! grep -q "openclaw.env" "$OPENCLAW_HOME/.bashrc" 2>/dev/null; then
+  echo '# Load OpenClaw env vars for exec tool subprocesses' >> "$OPENCLAW_HOME/.bashrc"
+  echo '[ -f /etc/openclaw.env ] && set -a && source /etc/openclaw.env && set +a' >> "$OPENCLAW_HOME/.bashrc"
+fi
+
 # ── 2. Install Node.js + pnpm + OpenClaw ──────────────────────────
 echo "[3/9] Installing Node.js, pnpm, and OpenClaw..."
 sudo -iu "$OPENCLAW_USER" bash <<NODEEOF
