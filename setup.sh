@@ -8,7 +8,7 @@ OPENCLAW_VERSION="2026.2.9"
 OPENCLAW_USER="openclaw"
 OPENCLAW_HOME="/home/$OPENCLAW_USER"
 STATE_DIR="$OPENCLAW_HOME/.openclaw"
-WORKSPACE_DIR="$OPENCLAW_HOME/workspace"
+WORKSPACE_DIR="$OPENCLAW_HOME/.openclaw/workspace"
 REPO_DIR="$OPENCLAW_HOME/openclaw-do-gradient"
 ENV_FILE="/etc/openclaw.env"
 
