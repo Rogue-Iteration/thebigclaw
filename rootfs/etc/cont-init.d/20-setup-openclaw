@@ -4,6 +4,7 @@ source /etc/s6-overlay/lib/env-utils.sh
 
 set -e
 source_env_prefix OPENCLAW_
+source_env_prefix TELEGRAM_
 
 # OpenClaw requires any env vars consumed in config to exist or else it fails to start.
 persist_env_var OPENCLAW_ \
@@ -92,6 +93,26 @@ echo "[generate-config] Adding gateway.auth.token to config"
 jq --arg token "$OPENCLAW_GATEWAY_TOKEN" '.gateway.auth.token = $token | .gateway.auth.mode = "token"' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
 
 # Permissions applied via /etc/digitalocean/permissions.yaml
+
+# ── Telegram channel auto-configuration ──
+if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+  echo "[generate-config] Configuring Telegram bot token..."
+  jq --arg token "$TELEGRAM_BOT_TOKEN" \
+    '.channels.telegram.enabled = true | .channels.telegram.botToken = $token' \
+    "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+
+  # Pre-seed sender allowlist if TELEGRAM_ALLOWED_IDS is set
+  if [ -n "$TELEGRAM_ALLOWED_IDS" ]; then
+    CREDS_DIR="$OPENCLAW_STATE_DIR/credentials"
+    mkdir -p "$CREDS_DIR"
+    ALLOW_FILE="$CREDS_DIR/telegram-allowFrom.json"
+    echo "$TELEGRAM_ALLOWED_IDS" | tr ',' '\n' | jq -R . | jq -s '{version:1,allowFrom:.}' > "$ALLOW_FILE"
+    chown openclaw:openclaw "$ALLOW_FILE"
+    echo "[generate-config] Telegram allowlist seeded: $TELEGRAM_ALLOWED_IDS"
+  fi
+else
+  echo "[generate-config] TELEGRAM_BOT_TOKEN not set, skipping Telegram config"
+fi
 
 echo "[generate-config] Final config:"
 jq '.' "$CONFIG_FILE"
