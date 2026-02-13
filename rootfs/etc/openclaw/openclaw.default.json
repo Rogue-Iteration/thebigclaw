@@ -78,7 +78,7 @@
     "agents": {
         "defaults": {
             "model": {
-                "primary": "gradient/llama3.3-70b-instruct"
+                "primary": "gradient/openai-gpt-oss-120b"
             }
         }
     }
