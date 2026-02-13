@@ -128,6 +128,11 @@ if [ -d "$CUSTOM_WS" ]; then
       echo "[generate-config] Injected custom $f into workspace"
     fi
   done
+  # Symlink skills directory so agent can discover and use tools
+  if [ -d "$CUSTOM_WS/skills" ] && [ ! -e "$OPENCLAW_WS/skills" ]; then
+    ln -s "$CUSTOM_WS/skills" "$OPENCLAW_WS/skills"
+    echo "[generate-config] Symlinked skills/ into agent workspace"
+  fi
 fi
 
 echo "[generate-config] Final config:"
