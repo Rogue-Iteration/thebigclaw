@@ -63,16 +63,14 @@ if [ -f "$OPENCLAW_JSON" ]; then
         "name": "Nova",
         "default": false,
         "workspace": (env.HOME + "/.openclaw/agents/web-researcher/agent"),
-        "model": { "primary": "gradient/openai-gpt-oss-120b" },
-        "heartbeat": { "interval": "30m" }
+        "model": { "primary": "gradient/openai-gpt-oss-120b" }
       },
       {
         "id": "fundamental-analyst",
         "name": "Max",
         "default": true,
         "workspace": (env.HOME + "/.openclaw/agents/fundamental-analyst/agent"),
-        "model": { "primary": "gradient/openai-gpt-oss-120b" },
-        "heartbeat": { "interval": "2h" }
+        "model": { "primary": "gradient/openai-gpt-oss-120b" }
       }
     ]
   ' "$OPENCLAW_JSON" > "$OPENCLAW_JSON.tmp" && mv "$OPENCLAW_JSON.tmp" "$OPENCLAW_JSON"

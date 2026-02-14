@@ -173,9 +173,6 @@ sudo -iu "$OPENCLAW_USER" bash <<CFGEOF
         "workspace": "\\$HOME/.openclaw/agents/web-researcher/agent",
         "model": {
           "primary": "gradient/openai-gpt-oss-120b"
-        },
-        "heartbeat": {
-          "interval": "30m"
         }
       },
       {
@@ -185,9 +182,6 @@ sudo -iu "$OPENCLAW_USER" bash <<CFGEOF
         "workspace": "\\$HOME/.openclaw/agents/fundamental-analyst/agent",
         "model": {
           "primary": "gradient/openai-gpt-oss-120b"
-        },
-        "heartbeat": {
-          "interval": "2h"
         }
       }
     ]
