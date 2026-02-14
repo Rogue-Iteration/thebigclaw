@@ -7,7 +7,7 @@ set -euo pipefail
 STATE_DIR="$HOME/.openclaw"
 WORKSPACE_DIR="$HOME/.openclaw/workspace"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-AGENTS=("web-researcher" "fundamental-analyst")
+AGENTS=("web-researcher" "fundamental-analyst" "social-researcher" "technical-analyst")
 
 echo "Pulling latest changes..."
 git -C "$SCRIPT_DIR" pull origin main
@@ -71,10 +71,24 @@ if [ -f "$OPENCLAW_JSON" ]; then
         "default": true,
         "workspace": (env.HOME + "/.openclaw/agents/fundamental-analyst/agent"),
         "model": { "primary": "gradient/openai-gpt-oss-120b" }
+      },
+      {
+        "id": "social-researcher",
+        "name": "Luna",
+        "default": false,
+        "workspace": (env.HOME + "/.openclaw/agents/social-researcher/agent"),
+        "model": { "primary": "gradient/openai-gpt-oss-120b" }
+      },
+      {
+        "id": "technical-analyst",
+        "name": "Ace",
+        "default": false,
+        "workspace": (env.HOME + "/.openclaw/agents/technical-analyst/agent"),
+        "model": { "primary": "gradient/openai-gpt-oss-120b" }
       }
     ]
   ' "$OPENCLAW_JSON" > "$OPENCLAW_JSON.tmp" && mv "$OPENCLAW_JSON.tmp" "$OPENCLAW_JSON"
-  echo "  ✓ Agent config updated (Nova + Max)"
+  echo "  ✓ Agent config updated (Nova + Max + Luna + Ace)"
 fi
 
 echo "Updating Python dependencies..."
@@ -86,8 +100,8 @@ sudo systemctl restart openclaw
 sleep 3
 if systemctl is-active --quiet openclaw; then
   echo "✅ OpenClaw restarted with multi-agent config"
-  echo "   Agents: Nova (web-researcher) + Max (fundamental-analyst)"
-  echo "   Max is default — messages go to Max unless you address Nova"
+  echo "   Agents: Nova + Max + Luna + Ace"
+  echo "   Max is default — messages go to Max unless you address another agent"
 else
   echo "⚠️  Check logs: journalctl -u openclaw -f"
 fi

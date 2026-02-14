@@ -18,8 +18,8 @@ from typing import Optional
 AGENT_PREFIXES = {
     "nova": "📰 **Nova here** —",
     "max": "🧠 **Max here** —",
-    "pixel": "📱 **Pixel here** —",  # Phase 2
-    "chart": "📈 **Chart here** —",  # Phase 2
+    "luna": "📱 **Luna here** —",
+    "ace": "📈 **Ace here** —",
 }
 
 
@@ -178,6 +178,9 @@ def format_morning_briefing(
         team_activity: Optional dict with:
             - nova_articles: count of articles Nova gathered
             - nova_filings: count of filings Nova found
+            - luna_posts: count of Reddit posts Luna tracked
+            - luna_sentiment: overall sentiment direction
+            - ace_signals: count of technical signals Ace detected
             - inter_agent_highlights: list of notable inter-agent messages
 
     Returns:
@@ -226,6 +229,16 @@ def format_morning_briefing(
         nova_articles = team_activity.get("nova_articles", 0)
         nova_filings = team_activity.get("nova_filings", 0)
         lines.append(f"  📰 Nova: {nova_articles} articles, {nova_filings} filings gathered")
+
+        luna_posts = team_activity.get("luna_posts", 0)
+        luna_sentiment = team_activity.get("luna_sentiment", "")
+        if luna_posts or luna_sentiment:
+            sentiment_str = f" ({luna_sentiment})" if luna_sentiment else ""
+            lines.append(f"  📱 Luna: {luna_posts} social posts tracked{sentiment_str}")
+
+        ace_signals = team_activity.get("ace_signals", 0)
+        if ace_signals:
+            lines.append(f"  📈 Ace: {ace_signals} technical signal(s) flagged")
 
         highlights = team_activity.get("inter_agent_highlights", [])
         if highlights:

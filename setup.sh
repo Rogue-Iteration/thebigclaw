@@ -13,7 +13,7 @@ REPO_DIR="$OPENCLAW_HOME/openclaw-do-gradient"
 ENV_FILE="/etc/openclaw.env"
 
 # Agent workspace layout
-AGENTS=("web-researcher" "fundamental-analyst")
+AGENTS=("web-researcher" "fundamental-analyst" "social-researcher" "technical-analyst")
 
 echo "╔════════════════════════════════════════════╗"
 echo "║  OpenClaw + Gradient AI — Droplet Setup    ║"
@@ -180,6 +180,24 @@ sudo -iu "$OPENCLAW_USER" bash <<CFGEOF
         "name": "Max",
         "default": true,
         "workspace": "\\$HOME/.openclaw/agents/fundamental-analyst/agent",
+        "model": {
+          "primary": "gradient/openai-gpt-oss-120b"
+        }
+      },
+      {
+        "id": "social-researcher",
+        "name": "Luna",
+        "default": false,
+        "workspace": "\\$HOME/.openclaw/agents/social-researcher/agent",
+        "model": {
+          "primary": "gradient/openai-gpt-oss-120b"
+        }
+      },
+      {
+        "id": "technical-analyst",
+        "name": "Ace",
+        "default": false,
+        "workspace": "\\$HOME/.openclaw/agents/technical-analyst/agent",
         "model": {
           "primary": "gradient/openai-gpt-oss-120b"
         }

@@ -117,13 +117,13 @@ class TestTriggerKBReindex:
         responses.add(
             responses.GET,
             f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/data_sources",
-            json={"data_sources": [{"uuid": "ds-123"}]},
+            json={"knowledge_base_data_sources": [{"uuid": "ds-123"}]},
             status=200,
         )
         # Mock: trigger indexing
         responses.add(
             responses.POST,
-            f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/indexing_jobs",
+            f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/data_sources/ds-123/indexing_jobs",
             json={"job_id": "job-456"},
             status=201,
         )
@@ -138,7 +138,7 @@ class TestTriggerKBReindex:
         responses.add(
             responses.GET,
             f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/data_sources",
-            json={"data_sources": []},
+            json={"knowledge_base_data_sources": []},
             status=200,
         )
 

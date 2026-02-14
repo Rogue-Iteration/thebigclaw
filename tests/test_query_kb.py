@@ -24,6 +24,7 @@ from query_kb import (
     query_with_rag,
     GRADIENT_INFERENCE_URL,
     DO_API_BASE,
+    KB_RETRIEVE_URL,
 )
 
 
@@ -69,7 +70,7 @@ class TestQueryKnowledgeBase:
         kb_uuid = "test-kb-uuid"
         responses.add(
             responses.POST,
-            f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/query",
+            f"{KB_RETRIEVE_URL}/{kb_uuid}/retrieve",
             json={"results": [{"content": "CAKE data", "score": 0.9}]},
             status=200,
         )
@@ -83,7 +84,7 @@ class TestQueryKnowledgeBase:
         kb_uuid = "test-kb-uuid"
         responses.add(
             responses.POST,
-            f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/query",
+            f"{KB_RETRIEVE_URL}/{kb_uuid}/retrieve",
             body="Error",
             status=500,
         )
@@ -108,7 +109,7 @@ class TestQueryWithRag:
         # Mock KB query
         responses.add(
             responses.POST,
-            f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/query",
+            f"{KB_RETRIEVE_URL}/{kb_uuid}/retrieve",
             json={"results": [{"content": "CAKE beat earnings", "score": 0.9}]},
             status=200,
         )
@@ -139,7 +140,7 @@ class TestQueryWithRag:
         # KB returns empty (maybe not indexed yet)
         responses.add(
             responses.POST,
-            f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/query",
+            f"{KB_RETRIEVE_URL}/{kb_uuid}/retrieve",
             json={"results": []},
             status=200,
         )
