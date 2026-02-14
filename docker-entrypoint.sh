@@ -146,7 +146,7 @@ JSON
   for pattern in \
     "python3" "/usr/bin/python3" "python3 *" \
     "cat" "python" "/usr/bin/python" "python *" \
-    "ls" "head" "tail" "pip3"; do
+    "ls" "head" "tail" "pip3" "sqlite3" "sqlite3 *"; do
     openclaw approvals allowlist add --target local --agent '*' --pattern "$pattern" 2>/dev/null || true
   done
 
@@ -198,6 +198,11 @@ fi
 
 echo "  ✓ Agents: Max + Nova + Luna + Ace"
 
-# ── 3. Hand off to CMD ───────────────────────────────────────────
+# ── 3. Always: initialize SQLite database ────────────────────────
+echo "💾 Initializing research database..."
+python3 "$APP_DIR/skills/gradient-research-assistant/db.py" --init --db "$STATE_DIR/research.db"
+echo "  ✓ Database ready"
+
+# ── 4. Hand off to CMD ───────────────────────────────────────────
 echo "🚀 Starting OpenClaw..."
 exec "$@"
