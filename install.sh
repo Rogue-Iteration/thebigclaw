@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
 DROPLET_NAME="openclaw-research"
 DROPLET_SIZE="s-1vcpu-2gb"
-DROPLET_IMAGE="docker-24-04"
+DROPLET_IMAGE="docker-20-04"
 REPO_URL="https://github.com/Rogue-Iteration/openclaw-do-gradient.git"
 REMOTE_DIR="/opt/openclaw"
 
