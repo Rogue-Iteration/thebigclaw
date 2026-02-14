@@ -20,6 +20,8 @@ import requests
 
 # Gradient inference endpoint (used for RAG-enhanced queries)
 GRADIENT_INFERENCE_URL = "https://inference.do-ai.run/v1/chat/completions"
+# Knowledge Base retrieval endpoint (from DO GenAI dashboard)
+KB_RETRIEVE_URL = "https://kbaas.do-ai.run/v1"
 DO_API_BASE = "https://api.digitalocean.com"
 
 
@@ -29,6 +31,9 @@ def query_knowledge_base(
     api_token: Optional[str] = None,
 ) -> dict:
     """Query the Gradient Knowledge Base for research documents.
+
+    Uses the KB retrieval endpoint (kbaas.do-ai.run) to search
+    indexed documents via semantic search.
 
     Args:
         query: The search query
@@ -52,8 +57,8 @@ def query_knowledge_base(
             "Content-Type": "application/json",
         }
 
-        url = f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/query"
-        payload = {"query": query, "top_k": 10}
+        url = f"{KB_RETRIEVE_URL}/{kb_uuid}/retrieve"
+        payload = {"query": query, "num_results": 10}
 
         resp = requests.post(url, headers=headers, json=payload, timeout=15)
         resp.raise_for_status()
