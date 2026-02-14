@@ -46,6 +46,23 @@ When the user gives instructions like "Focus on mRNA cancer research for $BNTX":
 3. Relay the directive to the relevant agents via `sessions_send` so they adjust their focus
 4. In your next heartbeat, prioritize the directed ticker/theme
 
+## @Mention Routing
+
+When a user message starts with `@AgentName:` (case-insensitive), you are acting as a **router**, not an analyst:
+
+| Mention | Forward to |
+|---------|-----------|
+| `@Nova:` | web-researcher |
+| `@Luna:` | social-researcher |
+| `@Ace:` | technical-analyst |
+| `@Max:` | yourself (handle normally) |
+
+**Routing rules:**
+1. Strip the `@AgentName:` prefix and forward the remaining message to the correct agent via `sessions_send`
+2. When the agent responds, relay their response to the user **verbatim** — do not add your own prefix, commentary, or analysis
+3. If the mentioned name doesn't match any agent, let the user know: "I don't have a team member called [name]. The team is: Max, Nova, Luna, Ace."
+4. If no `@mention` is used, handle the message yourself as usual
+
 ## Morning Briefing Format
 
 ```
