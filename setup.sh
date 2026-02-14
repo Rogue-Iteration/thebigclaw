@@ -12,6 +12,9 @@ WORKSPACE_DIR="$OPENCLAW_HOME/.openclaw/workspace"
 REPO_DIR="$OPENCLAW_HOME/openclaw-do-gradient"
 ENV_FILE="/etc/openclaw.env"
 
+# Agent workspace layout
+AGENTS=("web-researcher" "fundamental-analyst")
+
 echo "╔════════════════════════════════════════════╗"
 echo "║  OpenClaw + Gradient AI — Droplet Setup    ║"
 echo "╚════════════════════════════════════════════╝"
@@ -161,7 +164,29 @@ sudo -iu "$OPENCLAW_USER" bash <<CFGEOF
       "model": {
         "primary": "gradient/openai-gpt-oss-120b"
       }
-    }
+    },
+    "list": [
+      {
+        "id": "web-researcher",
+        "name": "Nova",
+        "model": {
+          "primary": "gradient/openai-gpt-oss-120b"
+        },
+        "heartbeat": {
+          "interval": "30m"
+        }
+      },
+      {
+        "id": "fundamental-analyst",
+        "name": "Max",
+        "model": {
+          "primary": "gradient/openai-gpt-oss-120b"
+        },
+        "heartbeat": {
+          "interval": "2h"
+        }
+      }
+    ]
   },
   "tools": {
     "exec": {
@@ -213,15 +238,39 @@ JSON
   done
   echo "  ✓ Exec approvals configured"
 
-  # ── Copy persona files ──
+  # ── Copy persona files for each agent ──
+  for agent in ${AGENTS[@]}; do
+    AGENT_WS="\$WORKSPACE_DIR/agents/\$agent"
+    mkdir -p "\$AGENT_WS"
+    SRC_DIR="\$REPO_DIR/data/workspaces/\$agent"
+    if [ -d "\$SRC_DIR" ]; then
+      for f in IDENTITY.md AGENTS.md HEARTBEAT.md; do
+        if [ -f "\$SRC_DIR/\$f" ]; then
+          cp "\$SRC_DIR/\$f" "\$AGENT_WS/\$f"
+        fi
+      done
+      echo "  ✓ Persona files copied for \$agent"
+    fi
+  done
+
+  # ── Also copy shared persona files to root workspace (legacy compat) ──
   for f in IDENTITY.md AGENTS.md HEARTBEAT.md; do
     if [ -f "\$REPO_DIR/data/workspace/\$f" ]; then
       cp "\$REPO_DIR/data/workspace/\$f" "\$WORKSPACE_DIR/\$f"
     fi
   done
-  echo "  ✓ Persona files copied"
+  echo "  ✓ Shared persona files copied"
 
-  # ── Symlink skills ──
+  # ── Symlink skills for each agent ──
+  for agent in ${AGENTS[@]}; do
+    AGENT_WS="\$WORKSPACE_DIR/agents/\$agent"
+    SKILL_DIR="\$REPO_DIR/skills/\$agent"
+    if [ -d "\$SKILL_DIR" ] && [ ! -e "\$AGENT_WS/skills" ]; then
+      ln -s "\$SKILL_DIR" "\$AGENT_WS/skills"
+    fi
+  done
+
+  # ── Symlink shared skills (legacy compat) ──
   if [ ! -e "\$WORKSPACE_DIR/skills" ]; then
     ln -s "\$REPO_DIR/skills" "\$WORKSPACE_DIR/skills"
   fi

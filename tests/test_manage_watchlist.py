@@ -36,6 +36,7 @@ from manage_watchlist import (
     get_effective_rules,
     show_watchlist,
     find_ticker,
+    set_directive,
 )
 
 
@@ -60,12 +61,18 @@ def sample_watchlist():
                 "symbol": "CAKE",
                 "name": "The Cheesecake Factory",
                 "added": "2026-02-12",
+                "theme": None,
+                "directive": None,
+                "explore_adjacent": False,
                 "rules": {},
             },
             {
                 "symbol": "HOG",
                 "name": "Harley-Davidson",
                 "added": "2026-02-12",
+                "theme": None,
+                "directive": None,
+                "explore_adjacent": False,
                 "rules": {"price_movement_pct": 3},
             },
         ],
@@ -171,6 +178,34 @@ class TestAddTicker:
     def test_add_empty_name_fails(self, sample_watchlist):
         result = add_ticker(sample_watchlist, "DIS", "")
         assert result["success"] is False
+
+    def test_add_with_theme(self, sample_watchlist):
+        result = add_ticker(sample_watchlist, "BNTX", "BioNTech", theme="mRNA cancer research")
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "BNTX")
+        assert ticker["theme"] == "mRNA cancer research"
+        assert "Theme" in result["message"]
+
+    def test_add_with_directive(self, sample_watchlist):
+        result = add_ticker(sample_watchlist, "BNTX", "BioNTech", directive="Focus on clinical trials")
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "BNTX")
+        assert ticker["directive"] == "Focus on clinical trials"
+
+    def test_add_with_explore_adjacent(self, sample_watchlist):
+        result = add_ticker(sample_watchlist, "BNTX", "BioNTech", explore_adjacent=True)
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "BNTX")
+        assert ticker["explore_adjacent"] is True
+        assert "exploration enabled" in result["message"]
+
+    def test_add_defaults_for_new_fields(self, sample_watchlist):
+        result = add_ticker(sample_watchlist, "DIS", "Disney")
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "DIS")
+        assert ticker["theme"] is None
+        assert ticker["directive"] is None
+        assert ticker["explore_adjacent"] is False
 
 
 # ─── Removing Tickers ─────────────────────────────────────────────
@@ -310,3 +345,68 @@ class TestShowWatchlist:
         }
         output = show_watchlist(empty)
         assert "no tickers" in output.lower() or output  # should handle gracefully
+
+    def test_show_includes_theme_directive(self, sample_watchlist):
+        sample_watchlist["tickers"][0]["theme"] = "Casual dining expansion"
+        sample_watchlist["tickers"][0]["directive"] = "Watch franchise deals"
+        output = show_watchlist(sample_watchlist)
+        assert "Casual dining expansion" in output
+        assert "Watch franchise deals" in output
+        assert "🎯" in output
+        assert "📌" in output
+
+
+# ─── Set Directive ────────────────────────────────────────────────
+
+
+class TestSetDirective:
+    def test_set_theme(self, sample_watchlist):
+        result = set_directive(sample_watchlist, "CAKE", theme="Casual dining")
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "CAKE")
+        assert ticker["theme"] == "Casual dining"
+
+    def test_set_directive_text(self, sample_watchlist):
+        result = set_directive(sample_watchlist, "CAKE", directive="Focus on franchise expansion")
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "CAKE")
+        assert ticker["directive"] == "Focus on franchise expansion"
+
+    def test_set_explore_adjacent(self, sample_watchlist):
+        result = set_directive(sample_watchlist, "CAKE", explore_adjacent=True)
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "CAKE")
+        assert ticker["explore_adjacent"] is True
+
+    def test_set_multiple_fields(self, sample_watchlist):
+        result = set_directive(
+            sample_watchlist,
+            "CAKE",
+            theme="Casual dining",
+            directive="Watch franchise deals",
+            explore_adjacent=True,
+        )
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "CAKE")
+        assert ticker["theme"] == "Casual dining"
+        assert ticker["directive"] == "Watch franchise deals"
+        assert ticker["explore_adjacent"] is True
+
+    def test_clear_theme(self, sample_watchlist):
+        # First set a theme
+        set_directive(sample_watchlist, "CAKE", theme="Test theme")
+        # Then clear it
+        result = set_directive(sample_watchlist, "CAKE", theme="")
+        assert result["success"] is True
+        ticker = find_ticker(sample_watchlist, "CAKE")
+        assert ticker["theme"] is None
+
+    def test_nonexistent_ticker_fails(self, sample_watchlist):
+        result = set_directive(sample_watchlist, "AAPL", theme="Test")
+        assert result["success"] is False
+        assert "not found" in result["message"].lower()
+
+    def test_no_changes_fails(self, sample_watchlist):
+        result = set_directive(sample_watchlist, "CAKE")
+        assert result["success"] is False
+        assert "no changes" in result["message"].lower()

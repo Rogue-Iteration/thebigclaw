@@ -1,22 +1,33 @@
 #!/usr/bin/env python3
 """
-Alert formatting for the Gradient Research Assistant.
+Alert formatting for the Gradient Research Team.
 
 Formats analysis results into user-friendly Telegram messages
-that OpenClaw delivers proactively.
+that OpenClaw delivers proactively. Supports agent name prefixes
+so each agent's alerts are identifiable.
 
 Usage:
     Called programmatically from the heartbeat cycle, not directly.
 """
 
 import json
+from datetime import datetime, timezone
 from typing import Optional
+
+# Agent name prefixes
+AGENT_PREFIXES = {
+    "nova": "📰 **Nova here** —",
+    "max": "🧠 **Max here** —",
+    "pixel": "📱 **Pixel here** —",  # Phase 2
+    "chart": "📈 **Chart here** —",  # Phase 2
+}
 
 
 def format_alert_message(
     ticker: str,
     company_name: str,
     analysis: dict,
+    agent_name: Optional[str] = None,
 ) -> str:
     """Format an analysis result as a proactive alert message.
 
@@ -24,6 +35,7 @@ def format_alert_message(
         ticker: Stock ticker symbol
         company_name: Full company name
         analysis: The result dict from analyze_ticker()
+        agent_name: Optional agent name for message prefix (e.g., 'nova', 'max')
 
     Returns:
         Human-readable alert message string
@@ -44,6 +56,12 @@ def format_alert_message(
         severity = "🟢"
 
     lines = []
+
+    # Agent name prefix
+    if agent_name and agent_name.lower() in AGENT_PREFIXES:
+        lines.append(AGENT_PREFIXES[agent_name.lower()])
+        lines.append("")
+
     lines.append(f"{severity} **Alert: ${ticker}** ({company_name})")
     lines.append(f"Significance: **{score}/10**")
     lines.append("")
@@ -82,22 +100,32 @@ def format_alert_message(
     return "\n".join(lines)
 
 
-def format_heartbeat_summary(results: list[dict]) -> str:
+def format_heartbeat_summary(
+    results: list[dict],
+    agent_name: Optional[str] = None,
+) -> str:
     """Format a summary of the entire heartbeat cycle.
 
     Args:
         results: List of analysis results for all tickers
+        agent_name: Optional agent name for message prefix
 
     Returns:
         Summary message string
     """
     if not results:
-        return "💤 Heartbeat complete. No tickers to check."
+        prefix = f"{AGENT_PREFIXES.get(agent_name.lower(), '')} " if agent_name else ""
+        return f"{prefix}💤 Heartbeat complete. No tickers to check."
 
     alerts = [r for r in results if r.get("should_alert")]
     ok = [r for r in results if not r.get("should_alert")]
 
     lines = []
+
+    if agent_name and agent_name.lower() in AGENT_PREFIXES:
+        lines.append(AGENT_PREFIXES[agent_name.lower()])
+        lines.append("")
+
     lines.append(f"💓 **Heartbeat Complete** — checked {len(results)} tickers")
     lines.append("")
 
@@ -132,3 +160,82 @@ def should_alert(analysis: dict, threshold: int = 6) -> bool:
 
     score = analysis.get("significance_score", 0)
     return score >= threshold
+
+
+def format_morning_briefing(
+    ticker_summaries: list[dict],
+    team_activity: Optional[dict] = None,
+) -> str:
+    """Format Max's daily morning briefing.
+
+    Args:
+        ticker_summaries: List of dicts, each with:
+            - ticker: symbol
+            - company: company name
+            - thesis: current thesis string
+            - conviction: 'low', 'medium', or 'high'
+            - overnight: list of overnight developments
+        team_activity: Optional dict with:
+            - nova_articles: count of articles Nova gathered
+            - nova_filings: count of filings Nova found
+            - inter_agent_highlights: list of notable inter-agent messages
+
+    Returns:
+        Formatted morning briefing message
+    """
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    lines = []
+    lines.append("🧠 **Max here** — Morning Briefing")
+    lines.append(f"*{now}*")
+    lines.append("")
+
+    # Watchlist overview
+    lines.append("📊 **WATCHLIST OVERVIEW**")
+    lines.append("")
+
+    if not ticker_summaries:
+        lines.append("No tickers on the watchlist yet.")
+    else:
+        for ts in ticker_summaries:
+            ticker = ts.get("ticker", "?")
+            company = ts.get("company", "")
+            thesis = ts.get("thesis", "No thesis yet.")
+            conviction = ts.get("conviction", "—")
+
+            conviction_emoji = {
+                "high": "🟢",
+                "medium": "🟡",
+                "low": "🔴",
+            }.get(conviction, "⚪")
+
+            lines.append(f"**${ticker}** ({company}) {conviction_emoji} Conviction: {conviction}")
+            lines.append(f"  {thesis}")
+
+            overnight = ts.get("overnight", [])
+            if overnight:
+                for item in overnight:
+                    lines.append(f"  • {item}")
+            else:
+                lines.append("  • Quiet overnight")
+            lines.append("")
+
+    # Team activity
+    if team_activity:
+        lines.append("📋 **TEAM ACTIVITY** (last 24h)")
+        nova_articles = team_activity.get("nova_articles", 0)
+        nova_filings = team_activity.get("nova_filings", 0)
+        lines.append(f"  📰 Nova: {nova_articles} articles, {nova_filings} filings gathered")
+
+        highlights = team_activity.get("inter_agent_highlights", [])
+        if highlights:
+            for h in highlights:
+                lines.append(f"  • {h}")
+        lines.append("")
+
+    # Closing
+    lines.append("❓ Anything you want me to dig into today?")
+    lines.append("")
+    lines.append("_Research data only — not financial advice._")
+
+    return "\n".join(lines)

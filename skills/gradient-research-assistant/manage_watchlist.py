@@ -169,8 +169,23 @@ def find_ticker(watchlist: dict, symbol: str) -> Optional[dict]:
     return None
 
 
-def add_ticker(watchlist: dict, symbol: str, name: str) -> dict:
+def add_ticker(
+    watchlist: dict,
+    symbol: str,
+    name: str,
+    theme: Optional[str] = None,
+    directive: Optional[str] = None,
+    explore_adjacent: bool = False,
+) -> dict:
     """Add a new ticker to the watchlist with default rules.
+
+    Args:
+        watchlist: The watchlist dict
+        symbol: Stock ticker symbol
+        name: Company name
+        theme: Optional research theme (e.g., "mRNA cancer research")
+        directive: Optional research directive
+        explore_adjacent: Whether to explore adjacent tickers
 
     Returns:
         dict with 'success' (bool) and 'message' (str).
@@ -193,14 +208,22 @@ def add_ticker(watchlist: dict, symbol: str, name: str) -> dict:
         "symbol": normalized,
         "name": name.strip(),
         "added": date.today().isoformat(),
+        "theme": theme.strip() if theme else None,
+        "directive": directive.strip() if directive else None,
+        "explore_adjacent": bool(explore_adjacent),
         "rules": {},
     }
     watchlist.setdefault("tickers", []).append(ticker)
 
-    return {
-        "success": True,
-        "message": f"Added ${normalized} ({name.strip()}) to your watchlist with default alert rules.",
-    }
+    msg = f"Added ${normalized} ({name.strip()}) to your watchlist."
+    if theme:
+        msg += f" Theme: {theme.strip()}"
+    if directive:
+        msg += f" Directive: {directive.strip()}"
+    if explore_adjacent:
+        msg += " Adjacent ticker exploration enabled."
+
+    return {"success": True, "message": msg}
 
 
 def remove_ticker(watchlist: dict, symbol: str) -> dict:
@@ -322,6 +345,53 @@ def get_effective_rules(watchlist: dict, symbol: str) -> Optional[dict]:
     return effective
 
 
+def set_directive(
+    watchlist: dict,
+    symbol: str,
+    theme: Optional[str] = None,
+    directive: Optional[str] = None,
+    explore_adjacent: Optional[bool] = None,
+) -> dict:
+    """Set research theme, directive, or explore_adjacent for a ticker.
+
+    Args:
+        watchlist: The watchlist dict
+        symbol: Stock ticker symbol
+        theme: Research theme (None = don't change)
+        directive: Research directive (None = don't change)
+        explore_adjacent: Whether to explore adjacent tickers (None = don't change)
+
+    Returns:
+        dict with 'success' (bool) and 'message' (str).
+    """
+    ticker = find_ticker(watchlist, symbol)
+    if ticker is None:
+        normalized = _normalize_symbol(symbol)
+        return {
+            "success": False,
+            "message": f"${normalized} not found in your watchlist.",
+        }
+
+    changes = []
+    if theme is not None:
+        ticker["theme"] = theme.strip() if theme else None
+        changes.append(f"theme='{theme}'" if theme else "theme cleared")
+    if directive is not None:
+        ticker["directive"] = directive.strip() if directive else None
+        changes.append(f"directive='{directive}'" if directive else "directive cleared")
+    if explore_adjacent is not None:
+        ticker["explore_adjacent"] = bool(explore_adjacent)
+        changes.append(f"explore_adjacent={'on' if explore_adjacent else 'off'}")
+
+    if not changes:
+        return {"success": False, "message": "No changes specified."}
+
+    return {
+        "success": True,
+        "message": f"Updated ${ticker['symbol']}: {', '.join(changes)}",
+    }
+
+
 def show_watchlist(watchlist: dict) -> str:
     """Format the current watchlist with effective rules for display.
 
@@ -350,8 +420,19 @@ def show_watchlist(watchlist: dict) -> str:
         name = ticker["name"]
         added = ticker.get("added", "unknown")
         overrides = ticker.get("rules", {})
+        theme = ticker.get("theme")
+        directive = ticker.get("directive")
+        explore = ticker.get("explore_adjacent", False)
 
         lines.append(f"**${symbol}** — {name} (since {added})")
+
+        # Show theme/directive if set
+        if theme:
+            lines.append(f"  🎯 Theme: {theme}")
+        if directive:
+            lines.append(f"  📌 Directive: {directive}")
+        if explore:
+            lines.append("  🔍 Adjacent ticker exploration: on")
 
         effective = {**defaults, **overrides}
         for rule_name, value in sorted(effective.items()):
@@ -398,9 +479,13 @@ def main():
     group.add_argument("--set-rule", nargs=3, metavar=("TICKER", "RULE", "VALUE"), help="Set a per-ticker rule")
     group.add_argument("--reset-rules", metavar="TICKER", help="Reset ticker to default rules")
     group.add_argument("--set-global", nargs=2, metavar=("KEY", "VALUE"), help="Set a global setting")
+    group.add_argument("--set-directive", metavar="TICKER", help="Set theme/directive for a ticker")
     group.add_argument("--show", action="store_true", help="Show current watchlist")
 
     parser.add_argument("--name", help="Company name (required with --add)")
+    parser.add_argument("--theme", default=None, help="Research theme (with --add or --set-directive)")
+    parser.add_argument("--directive", default=None, help="Research directive (with --add or --set-directive)")
+    parser.add_argument("--explore", action="store_true", help="Enable adjacent ticker exploration (with --add or --set-directive)")
 
     args = parser.parse_args()
 
@@ -410,7 +495,14 @@ def main():
         if not args.name:
             print("Error: --name is required when adding a ticker.", file=sys.stderr)
             sys.exit(1)
-        result = add_ticker(watchlist, args.add, args.name)
+        result = add_ticker(
+            watchlist,
+            args.add,
+            args.name,
+            theme=args.theme,
+            directive=args.directive,
+            explore_adjacent=args.explore,
+        )
     elif args.remove:
         result = remove_ticker(watchlist, args.remove)
     elif args.set_rule:
@@ -421,6 +513,14 @@ def main():
     elif args.set_global:
         key, value = args.set_global
         result = set_global(watchlist, key, _parse_value(value))
+    elif args.set_directive:
+        result = set_directive(
+            watchlist,
+            args.set_directive,
+            theme=args.theme,
+            directive=args.directive,
+            explore_adjacent=args.explore if args.explore else None,
+        )
     elif args.show:
         print(show_watchlist(watchlist))
         return

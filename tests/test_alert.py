@@ -1,10 +1,12 @@
 """
-Tests for alert.py — Phase 5 (TDD)
+Tests for alert.py — Phase 5 (TDD) + Multi-Agent Extensions
 
 Tests cover:
 - Alert message formatting (severity, reasons, actions)
+- Agent name prefix in alerts
 - Heartbeat summary formatting
 - Alert threshold logic
+- Morning briefing formatting (Max)
 """
 
 from pathlib import Path
@@ -16,7 +18,13 @@ import sys
 SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant"
 sys.path.insert(0, str(SKILL_DIR))
 
-from alert import format_alert_message, format_heartbeat_summary, should_alert
+from alert import (
+    format_alert_message,
+    format_heartbeat_summary,
+    should_alert,
+    format_morning_briefing,
+    AGENT_PREFIXES,
+)
 
 
 # ─── Fixtures ─────────────────────────────────────────────────────
@@ -158,3 +166,102 @@ class TestShouldAlert:
     def test_custom_threshold(self):
         assert should_alert(HIGH_SCORE_ANALYSIS, threshold=9) is False
         assert should_alert(HIGH_SCORE_ANALYSIS, threshold=8) is True
+
+
+# ─── Agent Name Prefix ───────────────────────────────────────────
+
+
+class TestAgentNamePrefix:
+    def test_alert_with_nova_prefix(self):
+        msg = format_alert_message("CAKE", "The Cheesecake Factory", HIGH_SCORE_ANALYSIS, agent_name="nova")
+        assert "📰 **Nova here**" in msg
+
+    def test_alert_with_max_prefix(self):
+        msg = format_alert_message("CAKE", "The Cheesecake Factory", HIGH_SCORE_ANALYSIS, agent_name="max")
+        assert "🧠 **Max here**" in msg
+
+    def test_alert_without_agent_name(self):
+        msg = format_alert_message("CAKE", "The Cheesecake Factory", HIGH_SCORE_ANALYSIS)
+        assert "Nova" not in msg
+        assert "Max" not in msg
+
+    def test_heartbeat_with_agent_name(self):
+        results = [
+            {"ticker": "CAKE", "should_alert": False, "significance_score": 2},
+        ]
+        msg = format_heartbeat_summary(results, agent_name="nova")
+        assert "📰 **Nova here**" in msg
+
+    def test_heartbeat_empty_with_agent_name(self):
+        msg = format_heartbeat_summary([], agent_name="nova")
+        assert "📰 **Nova here**" in msg
+
+
+# ─── Morning Briefing ────────────────────────────────────────────
+
+
+class TestFormatMorningBriefing:
+    def test_basic_briefing(self):
+        summaries = [
+            {
+                "ticker": "CAKE",
+                "company": "The Cheesecake Factory",
+                "thesis": "Strong earnings trajectory, bullish momentum.",
+                "conviction": "high",
+                "overnight": ["Q4 earnings beat estimates by 12%"],
+            },
+        ]
+        msg = format_morning_briefing(summaries)
+        assert "🧠 **Max here**" in msg
+        assert "Morning Briefing" in msg
+        assert "$CAKE" in msg
+        assert "Conviction: high" in msg
+        assert "🟢" in msg
+        assert "Q4 earnings" in msg
+
+    def test_empty_watchlist(self):
+        msg = format_morning_briefing([])
+        assert "No tickers" in msg
+
+    def test_team_activity(self):
+        summaries = [
+            {
+                "ticker": "CAKE",
+                "company": "The Cheesecake Factory",
+                "thesis": "Watching",
+                "conviction": "medium",
+                "overnight": [],
+            },
+        ]
+        team = {
+            "nova_articles": 15,
+            "nova_filings": 3,
+            "inter_agent_highlights": ["Nova flagged new 8-K for $CAKE"],
+        }
+        msg = format_morning_briefing(summaries, team_activity=team)
+        assert "TEAM ACTIVITY" in msg
+        assert "15 articles" in msg
+        assert "3 filings" in msg
+        assert "8-K" in msg
+
+    def test_includes_disclaimer(self):
+        msg = format_morning_briefing([])
+        assert "not financial advice" in msg
+
+    def test_includes_question(self):
+        msg = format_morning_briefing([])
+        assert "dig into" in msg
+
+    def test_quiet_overnight(self):
+        summaries = [
+            {
+                "ticker": "HOG",
+                "company": "Harley-Davidson",
+                "thesis": "Sideways trading.",
+                "conviction": "low",
+                "overnight": [],
+            },
+        ]
+        msg = format_morning_briefing(summaries)
+        assert "Quiet overnight" in msg
+        assert "🔴" in msg  # Low conviction

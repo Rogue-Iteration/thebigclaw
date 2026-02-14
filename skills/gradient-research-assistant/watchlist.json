@@ -16,30 +16,45 @@
       "symbol": "CAKE",
       "name": "The Cheesecake Factory",
       "added": "2026-02-12",
+      "theme": null,
+      "directive": null,
+      "explore_adjacent": false,
       "rules": {}
     },
     {
       "symbol": "HOG",
       "name": "Harley-Davidson",
       "added": "2026-02-12",
+      "theme": null,
+      "directive": null,
+      "explore_adjacent": false,
       "rules": {}
     },
     {
       "symbol": "BOOM",
       "name": "Dynamic Materials Corp",
       "added": "2026-02-12",
+      "theme": null,
+      "directive": null,
+      "explore_adjacent": false,
       "rules": {}
     },
     {
       "symbol": "LUV",
       "name": "Southwest Airlines",
       "added": "2026-02-12",
+      "theme": null,
+      "directive": null,
+      "explore_adjacent": false,
       "rules": {}
     },
     {
       "symbol": "WOOF",
       "name": "Petco Health and Wellness",
       "added": "2026-02-12",
+      "theme": null,
+      "directive": null,
+      "explore_adjacent": false,
       "rules": {}
     }
   ]
