@@ -228,17 +228,17 @@ echo "  ✓ Agents: Max + Nova + Luna + Ace"
 
 # ── 3. Always: initialize SQLite database ────────────────────────
 echo "💾 Initializing research database..."
-python3 "$APP_DIR/skills/gradient-research-assistant/db.py" --init --db "$STATE_DIR/research.db"
+python3 "$APP_DIR/skills/gradient-research-assistant/scripts/db.py" --init --db "$STATE_DIR/research.db"
 echo "  ✓ Database ready"
 
 # ── 4. Always: sync timezone and seed default schedules ──────────
 if [ -n "${USER_TIMEZONE:-}" ]; then
-  python3 "$APP_DIR/skills/gradient-research-assistant/schedule.py" \
+  python3 "$APP_DIR/skills/gradient-research-assistant/scripts/schedule.py" \
     --set-timezone "$USER_TIMEZONE" --db "$STATE_DIR/research.db"
   echo "  ✓ Timezone: $USER_TIMEZONE"
 fi
 
-python3 "$APP_DIR/skills/gradient-research-assistant/schedule.py" \
+python3 "$APP_DIR/skills/gradient-research-assistant/scripts/schedule.py" \
   --seed-defaults --db "$STATE_DIR/research.db"
 echo "  ✓ Schedules ready"
 
