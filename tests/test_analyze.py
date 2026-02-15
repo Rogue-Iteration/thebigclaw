@@ -16,8 +16,10 @@ import responses
 
 import sys
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant" / "scripts"
+INFERENCE_DIR = Path(__file__).parent.parent / "skills" / "gradient-inference" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
+sys.path.insert(0, str(INFERENCE_DIR))
 
 from analyze import (
     build_analysis_prompt,

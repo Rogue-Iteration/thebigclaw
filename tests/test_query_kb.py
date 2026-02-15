@@ -15,8 +15,12 @@ import responses
 
 import sys
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant" / "scripts"
+INFERENCE_DIR = Path(__file__).parent.parent / "skills" / "gradient-inference" / "scripts"
+KB_DIR = Path(__file__).parent.parent / "skills" / "gradient-knowledge-base" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
+sys.path.insert(0, str(INFERENCE_DIR))
+sys.path.insert(0, str(KB_DIR))
 
 from query_kb import (
     build_rag_prompt,

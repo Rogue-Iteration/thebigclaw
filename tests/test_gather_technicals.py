@@ -16,7 +16,7 @@ import pytest
 
 import sys
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "technical-analyst"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-data-gathering" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
 
 from gather_technicals import (

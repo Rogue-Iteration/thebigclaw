@@ -8,19 +8,33 @@ accumulated over time.
 Usage:
     python3 query_kb.py --query "What do you know about CAKE?"
     python3 query_kb.py --ticker CAKE
+
+Delegates to the generic gradient-knowledge-base and gradient-inference
+skills for low-level API calls; this module adds the financial research
+domain-specific RAG prompt.
 """
 
 import argparse
 import json
 import os
 import sys
+from pathlib import Path
 from typing import Optional
 
 import requests
 
-# Gradient inference endpoint (used for RAG-enhanced queries)
+# ─── Skill imports ────────────────────────────────────────────────
+# Add the generic skill script directories to sys.path so we can
+# import from them without installing as packages.
+_SKILLS_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(_SKILLS_ROOT / "gradient-knowledge-base" / "scripts"))
+sys.path.insert(0, str(_SKILLS_ROOT / "gradient-inference" / "scripts"))
+
+import gradient_kb_query
+import gradient_chat
+
+# ─── Constants (frozen — tests import these) ─────────────────────
 GRADIENT_INFERENCE_URL = "https://inference.do-ai.run/v1/chat/completions"
-# Knowledge Base retrieval endpoint (from DO GenAI dashboard)
 KB_RETRIEVE_URL = "https://kbaas.do-ai.run/v1"
 DO_API_BASE = "https://api.digitalocean.com"
 
@@ -32,8 +46,7 @@ def query_knowledge_base(
 ) -> dict:
     """Query the Gradient Knowledge Base for research documents.
 
-    Uses the KB retrieval endpoint (kbaas.do-ai.run) to search
-    indexed documents via semantic search.
+    Delegates to gradient_kb_query.query_kb() from the generic KB skill.
 
     Args:
         query: The search query
@@ -43,40 +56,14 @@ def query_knowledge_base(
     Returns:
         dict with 'success', 'results', and 'message'
     """
-    kb_uuid = kb_uuid or os.environ.get("GRADIENT_KB_UUID", "")
-    api_token = api_token or os.environ.get("DO_API_TOKEN", "")
-
-    if not kb_uuid:
-        return {"success": False, "results": [], "message": "No GRADIENT_KB_UUID configured."}
-    if not api_token:
-        return {"success": False, "results": [], "message": "No DO_API_TOKEN configured."}
-
-    try:
-        headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json",
-        }
-
-        url = f"{KB_RETRIEVE_URL}/{kb_uuid}/retrieve"
-        payload = {"query": query, "num_results": 10}
-
-        resp = requests.post(url, headers=headers, json=payload, timeout=15)
-        resp.raise_for_status()
-
-        data = resp.json()
-        results = data.get("results", [])
-
-        return {
-            "success": True,
-            "results": results,
-            "message": f"Found {len(results)} relevant documents.",
-        }
-    except requests.RequestException as e:
-        return {"success": False, "results": [], "message": f"KB query failed: {str(e)}"}
+    return gradient_kb_query.query_kb(query, kb_uuid=kb_uuid, api_token=api_token)
 
 
 def build_rag_prompt(query: str, kb_results: list[dict]) -> str:
     """Build a RAG-enhanced prompt combining the user's question with KB context.
+
+    This is the financial-research-specific version — emphasizes ticker
+    analysis, dates, and watchlist awareness.
 
     Args:
         query: The user's original question
@@ -123,6 +110,10 @@ def query_with_rag(
 ) -> dict:
     """Run a RAG-enhanced query: KB search → LLM synthesis.
 
+    Delegates KB retrieval to gradient_kb_query and LLM call to
+    gradient_chat, while using this module's financial-research-specific
+    build_rag_prompt().
+
     Args:
         query: The user's question
         model: LLM model for synthesis
@@ -143,50 +134,40 @@ def query_with_rag(
             "message": "No GRADIENT_API_KEY configured.",
         }
 
-    # Step 1: Query the Knowledge Base
-    kb_result = query_knowledge_base(query, kb_uuid=kb_uuid, api_token=api_token)
+    # Step 1: Query the Knowledge Base (via generic skill)
+    kb_result = gradient_kb_query.query_kb(query, kb_uuid=kb_uuid, api_token=api_token)
     kb_results = kb_result.get("results", [])
 
-    # Step 2: Build RAG prompt
+    # Step 2: Build domain-specific RAG prompt
     prompt = build_rag_prompt(query, kb_results)
 
-    # Step 3: Call LLM for synthesis
-    try:
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
+    # Step 3: Call LLM for synthesis (via generic skill)
+    llm_result = gradient_chat.chat_completion(
+        messages=[
+            {"role": "system", "content": "You are a helpful financial research assistant."},
+            {"role": "user", "content": prompt},
+        ],
+        model=model,
+        api_key=api_key,
+        temperature=0.4,
+        max_tokens=1500,
+    )
 
-        payload = {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": "You are a helpful financial research assistant."},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": 0.4,
-            "max_tokens": 1500,
-        }
-
-        resp = requests.post(GRADIENT_INFERENCE_URL, headers=headers, json=payload, timeout=30)
-        resp.raise_for_status()
-
-        data = resp.json()
-        answer = data["choices"][0]["message"]["content"]
-
-        return {
-            "success": True,
-            "answer": answer,
-            "sources_count": len(kb_results),
-            "kb_success": kb_result["success"],
-            "message": f"Answered using {len(kb_results)} sources from the Knowledge Base.",
-        }
-    except (requests.RequestException, KeyError, IndexError) as e:
+    if not llm_result["success"]:
         return {
             "success": False,
             "answer": "",
             "sources_count": len(kb_results),
-            "message": f"LLM synthesis failed: {str(e)}",
+            "message": f"LLM synthesis failed: {llm_result['message']}",
         }
+
+    return {
+        "success": True,
+        "answer": llm_result["content"],
+        "sources_count": len(kb_results),
+        "kb_success": kb_result["success"],
+        "message": f"Answered using {len(kb_results)} sources from the Knowledge Base.",
+    }
 
 
 # ─── CLI Interface ────────────────────────────────────────────────

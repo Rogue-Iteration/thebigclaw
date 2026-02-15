@@ -15,7 +15,7 @@ import pytest
 
 import sys
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
 
 from alert import (

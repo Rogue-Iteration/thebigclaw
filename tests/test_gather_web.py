@@ -14,12 +14,8 @@ import pytest
 
 import sys
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "web-researcher"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-data-gathering" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
-
-# Also add original skill dir for shared fixtures
-ORIGINAL_SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant"
-sys.path.insert(0, str(ORIGINAL_SKILL_DIR))
 
 from gather_web import (
     parse_news_rss,

@@ -15,7 +15,7 @@ import json
 
 import sys
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "social-researcher"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-data-gathering" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
 
 from gather_social import (

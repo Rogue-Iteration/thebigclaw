@@ -9,6 +9,9 @@ Uses a two-pass model routing strategy:
 - Pass 1: Quick model for initial significance scoring
 - Pass 2: Strong model if score > threshold (deep analysis)
 
+Delegates LLM calls to gradient_chat.chat_completion() from the
+generic gradient-inference skill.
+
 Usage:
     python3 analyze.py --ticker CAKE --data /path/to/research.md --verbose
 """
@@ -22,7 +25,13 @@ from typing import Any, Optional
 
 import requests
 
-# Gradient AI inference endpoint
+# ─── Skill imports ────────────────────────────────────────────────
+_SKILLS_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(_SKILLS_ROOT / "gradient-inference" / "scripts"))
+
+import gradient_chat
+
+# ─── Constants (frozen — tests import these) ─────────────────────
 GRADIENT_INFERENCE_URL = "https://inference.do-ai.run/v1/chat/completions"
 
 # Default models (can be overridden via watchlist global_settings)
@@ -140,6 +149,9 @@ def parse_llm_response(response_text: str) -> Optional[dict]:
 def call_gradient_inference(prompt: str, model: str, api_key: str) -> Optional[str]:
     """Call Gradient Serverless Inference API.
 
+    Delegates to gradient_chat.chat_completion() from the generic
+    inference skill.
+
     Args:
         prompt: The prompt text
         model: Model identifier (e.g., 'qwen3-32b')
@@ -148,33 +160,20 @@ def call_gradient_inference(prompt: str, model: str, api_key: str) -> Optional[s
     Returns:
         The model's response text, or None on failure.
     """
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "model": model,
-        "messages": [
+    result = gradient_chat.chat_completion(
+        messages=[
             {"role": "system", "content": "You are a financial research analyst. Always respond with valid JSON."},
             {"role": "user", "content": prompt},
         ],
-        "temperature": 0.3,
-        "max_tokens": 1000,
-    }
+        model=model,
+        api_key=api_key,
+        temperature=0.3,
+        max_tokens=1000,
+    )
 
-    try:
-        resp = requests.post(
-            GRADIENT_INFERENCE_URL,
-            headers=headers,
-            json=payload,
-            timeout=30,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data["choices"][0]["message"]["content"]
-    except (requests.RequestException, KeyError, IndexError, Exception):
-        return None
+    if result["success"]:
+        return result["content"]
+    return None
 
 
 def analyze_ticker(

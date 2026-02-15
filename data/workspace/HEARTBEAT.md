@@ -15,17 +15,25 @@ Run a full research cycle for every ticker in the watchlist.
 python3 manage_watchlist.py --show
 ```
 
-2. For **each ticker** in the watchlist, run the full research cycle:
+2. For **each ticker** in the watchlist, delegate to the specialist agents:
 
 ```bash
-# Gather data from all sources
-python3 gather.py --ticker {{ticker}} --name "{{company_name}}" --output /tmp/research_{{ticker}}.md
+# Nova: gather news + SEC filings
+python3 gather_web.py --ticker {{ticker}} --name "{{company_name}}" --output /tmp/web_{{ticker}}.md
 
-# Store to DO Spaces and trigger KB re-indexing
-python3 store.py --ticker {{ticker}} --data /tmp/research_{{ticker}}.md
+# Luna: gather social sentiment
+python3 gather_social.py --ticker {{ticker}} --company "{{company_name}}" --output /tmp/social_{{ticker}}.md
 
-# Analyze significance against configured alert rules
-python3 analyze.py --ticker {{ticker}} --name "{{company_name}}" --data /tmp/research_{{ticker}}.md --verbose
+# Ace: gather technical data
+python3 gather_technicals.py --ticker {{ticker}} --company "{{company_name}}" --output /tmp/technicals_{{ticker}}.md
+
+# Store all reports to DO Spaces and trigger KB re-indexing
+python3 store.py --ticker {{ticker}} --data /tmp/web_{{ticker}}.md
+python3 store.py --ticker {{ticker}} --data /tmp/social_{{ticker}}.md
+python3 store.py --ticker {{ticker}} --data /tmp/technicals_{{ticker}}.md
+
+# Max: analyze significance across all data
+python3 analyze.py --ticker {{ticker}} --name "{{company_name}}" --data /tmp/web_{{ticker}}.md --verbose
 ```
 
 3. **If any ticker's analysis returns `should_alert: true`**, proactively send the user an alert message with the formatted details. Use the severity-appropriate emoji:

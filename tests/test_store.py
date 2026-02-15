@@ -19,8 +19,10 @@ from moto import mock_aws
 
 import sys
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant" / "scripts"
+KB_DIR = Path(__file__).parent.parent / "skills" / "gradient-knowledge-base" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
+sys.path.insert(0, str(KB_DIR))
 
 from store import (
     build_spaces_key,

@@ -19,7 +19,7 @@ import pytest
 import sys
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant"
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "gradient-research-assistant" / "scripts"
 sys.path.insert(0, str(SKILL_DIR))
 
 from db import get_connection, init_db, get_default_rules

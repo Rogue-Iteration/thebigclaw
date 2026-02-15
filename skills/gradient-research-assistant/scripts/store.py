@@ -6,6 +6,9 @@ Handles:
 1. Uploading research Markdown files to DigitalOcean Spaces
 2. Triggering Gradient Knowledge Base re-indexing
 
+Delegates low-level Spaces and KB operations to the generic
+gradient-knowledge-base skill scripts.
+
 Usage:
     python3 store.py --ticker CAKE --data /path/to/research.md
     python3 store.py --test --ticker CAKE
@@ -23,7 +26,14 @@ import boto3
 import requests
 from botocore.config import Config
 
-# DO API base
+# ─── Skill imports ────────────────────────────────────────────────
+_SKILLS_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(_SKILLS_ROOT / "gradient-knowledge-base" / "scripts"))
+
+import gradient_spaces
+import gradient_kb_manage
+
+# ─── Constants (frozen — tests import these) ─────────────────────
 DO_API_BASE = "https://api.digitalocean.com"
 
 
@@ -34,25 +44,18 @@ def get_spaces_client(
 ):
     """Create an S3-compatible client for DO Spaces.
 
-    Falls back to environment variables if args aren't provided.
+    Delegates to gradient_spaces.get_spaces_client().
     """
-    access_key = access_key or os.environ.get("DO_SPACES_ACCESS_KEY", "")
-    secret_key = secret_key or os.environ.get("DO_SPACES_SECRET_KEY", "")
-    endpoint = endpoint or os.environ.get("DO_SPACES_ENDPOINT", "https://nyc3.digitaloceanspaces.com")
-
-    return boto3.client(
-        "s3",
-        endpoint_url=endpoint,
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        config=Config(signature_version="s3v4"),
-    )
+    return gradient_spaces.get_spaces_client(access_key, secret_key, endpoint)
 
 
 def build_spaces_key(ticker: str, source: str = "combined", timestamp: Optional[str] = None) -> str:
     """Build the S3 key (path) for a research file in Spaces.
 
     Format: research/{date}/{TICKER}_{source}.md
+
+    This is research-assistant-specific — the generic skill has no
+    concept of tickers or research date partitioning.
     """
     if timestamp:
         date_str = timestamp[:10]  # YYYY-MM-DD from ISO format
@@ -72,6 +75,9 @@ def upload_to_spaces(
 ) -> dict:
     """Upload a Markdown research file to DO Spaces.
 
+    Delegates the actual upload to gradient_spaces.upload_file(),
+    but uses our domain-specific build_spaces_key() for path construction.
+
     Args:
         markdown_content: The Markdown text to upload
         ticker: Stock ticker symbol
@@ -84,34 +90,14 @@ def upload_to_spaces(
         dict with 'success', 'key', 'bucket', and 'message'
     """
     bucket = bucket or os.environ.get("DO_SPACES_BUCKET", "openclawresearch")
+    key = build_spaces_key(ticker, source, timestamp)
 
-    try:
-        if client is None:
-            client = get_spaces_client()
-
-        key = build_spaces_key(ticker, source, timestamp)
-
-        client.put_object(
-            Bucket=bucket,
-            Key=key,
-            Body=markdown_content.encode("utf-8"),
-            ContentType="text/markdown",
-            ACL="private",
-        )
-
-        return {
-            "success": True,
-            "key": key,
-            "bucket": bucket,
-            "message": f"Uploaded {key} to {bucket}",
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "key": "",
-            "bucket": bucket,
-            "message": f"Upload failed: {str(e)}",
-        }
+    return gradient_spaces.upload_file(
+        content=markdown_content,
+        key=key,
+        bucket=bucket,
+        client=client,
+    )
 
 
 def trigger_kb_reindex(
@@ -120,8 +106,7 @@ def trigger_kb_reindex(
 ) -> dict:
     """Trigger a re-indexing job for the Gradient Knowledge Base.
 
-    This tells the KB to re-scan its data sources (including our Spaces
-    bucket) and index any new documents.
+    Delegates to gradient_kb_manage.trigger_reindex().
 
     Args:
         kb_uuid: Knowledge Base UUID
@@ -138,38 +123,7 @@ def trigger_kb_reindex(
     if not api_token:
         return {"success": False, "message": "No DO_API_TOKEN configured."}
 
-    # Get data sources for this KB
-    try:
-        headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json",
-        }
-
-        # List data sources
-        list_url = f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/data_sources"
-        resp = requests.get(list_url, headers=headers, timeout=15)
-        resp.raise_for_status()
-        data_sources = resp.json().get("knowledge_base_data_sources", [])
-
-        if not data_sources:
-            return {"success": False, "message": "No data sources configured for this Knowledge Base."}
-
-        # Trigger indexing for the first (Spaces) data source
-        ds_id = data_sources[0].get("uuid", "")
-        if not ds_id:
-            return {"success": False, "message": "Data source has no UUID."}
-
-        index_url = f"{DO_API_BASE}/v2/gen-ai/knowledge_bases/{kb_uuid}/data_sources/{ds_id}/indexing_jobs"
-        resp = requests.post(index_url, headers=headers, json={}, timeout=15)
-        resp.raise_for_status()
-
-        return {
-            "success": True,
-            "message": f"Re-indexing triggered for KB {kb_uuid}, data source {ds_id}.",
-        }
-    except requests.RequestException:
-        # Re-indexing is best-effort — the KB auto-indexes on its own schedule
-        return {"success": True, "message": "Data uploaded to Spaces. KB will auto-index on its next cycle."}
+    return gradient_kb_manage.trigger_reindex(kb_uuid, api_token=api_token)
 
 
 def store_research(

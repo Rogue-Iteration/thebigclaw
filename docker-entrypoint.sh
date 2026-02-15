@@ -204,17 +204,13 @@ for agent in "${AGENTS[@]}"; do
     done
   fi
 
-  # Symlink agent-specific skills
-  SKILL_DIR="$APP_DIR/skills/$agent"
-  if [ -d "$SKILL_DIR" ] && [ ! -e "$AGENT_WS/skills/$agent" ]; then
-    ln -s "$SKILL_DIR" "$AGENT_WS/skills/$agent"
-  fi
-
   # Symlink shared skills
-  SHARED_SKILL_DIR="$APP_DIR/skills/gradient-research-assistant"
-  if [ -d "$SHARED_SKILL_DIR" ] && [ ! -e "$AGENT_WS/skills/gradient-research-assistant" ]; then
-    ln -s "$SHARED_SKILL_DIR" "$AGENT_WS/skills/gradient-research-assistant"
-  fi
+  for skill in gradient-research-assistant gradient-inference gradient-knowledge-base gradient-data-gathering; do
+    SHARED_SKILL_DIR="$APP_DIR/skills/$skill"
+    if [ -d "$SHARED_SKILL_DIR" ] && [ ! -e "$AGENT_WS/skills/$skill" ]; then
+      ln -s "$SHARED_SKILL_DIR" "$AGENT_WS/skills/$skill"
+    fi
+  done
 done
 
 # Shared workspace persona files (default agent fallback)

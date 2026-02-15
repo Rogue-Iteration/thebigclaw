@@ -5,7 +5,23 @@ description: >
   Monitors stock tickers, gathers data from public sources, stores it in a
   Gradient Knowledge Base, and proactively alerts you about significant events.
   All state is stored in a SQLite database shared across all agents.
+files: ["scripts/*"]
+homepage: https://github.com/Rogue-Iteration/TheBigClaw
+metadata:
+  clawdbot:
+    requires:
+      env:
+        - GRADIENT_API_KEY
+        - DO_API_TOKEN
+        - DO_SPACES_ACCESS_KEY
+        - DO_SPACES_SECRET_KEY
+      bins:
+        - python3
+  author: Rogue Iteration
+  version: "0.1.0"
+  tags: ["gradient", "research", "stocks", "rag", "do", "digitalocean"]
 ---
+
 
 # Gradient Research Assistant
 
