@@ -199,21 +199,13 @@ for i in $(seq 1 30); do
   fi
   sleep 5
 done
+sleep 3  # let sshd fully stabilize
 ok "SSH connected"
 
 # Harden the Droplet: firewall + auto-updates
 info "Configuring firewall and automatic security updates..."
-ssh -o StrictHostKeyChecking=accept-new "root@$DROPLET_IP" <<'HARDEN'
-  ufw default deny incoming
-  ufw default allow outgoing
-  ufw allow 22/tcp comment 'SSH'
-  # Remove Docker daemon ports pre-opened by docker-20-04 image
-  ufw delete allow 2375/tcp 2>/dev/null || true
-  ufw delete allow 2376/tcp 2>/dev/null || true
-  ufw --force enable
-  apt-get install -y -qq unattended-upgrades > /dev/null 2>&1
-  dpkg-reconfigure -f noninteractive unattended-upgrades
-HARDEN
+ssh -o StrictHostKeyChecking=accept-new "root@$DROPLET_IP" \
+  'ufw default deny incoming && ufw default allow outgoing && ufw allow 22/tcp comment "SSH" && ufw delete allow 2375/tcp 2>/dev/null; ufw delete allow 2376/tcp 2>/dev/null; ufw --force enable && apt-get install -y -qq unattended-upgrades > /dev/null 2>&1 && dpkg-reconfigure -f noninteractive unattended-upgrades'
 ok "Firewall active (SSH only) + auto-updates enabled"
 
 # Clone repo, copy .env, start containers
