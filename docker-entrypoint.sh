@@ -141,21 +141,21 @@ JSON
     BINDINGS_JSON="[]"
 
     ACCOUNTS_JSON=$(echo "$ACCOUNTS_JSON" | jq --arg t "$MAX_TELEGRAM_BOT_TOKEN" '.max = {"botToken": $t}')
-    BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"channel": "telegram", "account": "max", "agentId": "fundamental-analyst"}]')
+    BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"match": {"channel": "telegram", "accountId": "max"}, "agentId": "fundamental-analyst"}]')
 
     if [ -n "${NOVA_TELEGRAM_BOT_TOKEN:-}" ]; then
       ACCOUNTS_JSON=$(echo "$ACCOUNTS_JSON" | jq --arg t "$NOVA_TELEGRAM_BOT_TOKEN" '.nova = {"botToken": $t}')
-      BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"channel": "telegram", "account": "nova", "agentId": "web-researcher"}]')
+      BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"match": {"channel": "telegram", "accountId": "nova"}, "agentId": "web-researcher"}]')
     fi
 
     if [ -n "${LUNA_TELEGRAM_BOT_TOKEN:-}" ]; then
       ACCOUNTS_JSON=$(echo "$ACCOUNTS_JSON" | jq --arg t "$LUNA_TELEGRAM_BOT_TOKEN" '.luna = {"botToken": $t}')
-      BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"channel": "telegram", "account": "luna", "agentId": "social-researcher"}]')
+      BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"match": {"channel": "telegram", "accountId": "luna"}, "agentId": "social-researcher"}]')
     fi
 
     if [ -n "${ACE_TELEGRAM_BOT_TOKEN:-}" ]; then
       ACCOUNTS_JSON=$(echo "$ACCOUNTS_JSON" | jq --arg t "$ACE_TELEGRAM_BOT_TOKEN" '.ace = {"botToken": $t}')
-      BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"channel": "telegram", "account": "ace", "agentId": "technical-analyst"}]')
+      BINDINGS_JSON=$(echo "$BINDINGS_JSON" | jq '. + [{"match": {"channel": "telegram", "accountId": "ace"}, "agentId": "technical-analyst"}]')
     fi
 
     jq --argjson accounts "$ACCOUNTS_JSON" --argjson bindings "$BINDINGS_JSON" \
