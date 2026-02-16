@@ -175,7 +175,7 @@ JSON
     fi
 
     jq --argjson accounts "$ACCOUNTS_JSON" --argjson bindings "$BINDINGS_JSON" --argjson allow "$ALLOW_FROM" \
-      '.channels.telegram.enabled = true | .channels.telegram.groupPolicy = "open" | .channels.telegram.dmPolicy = "pairing" | .channels.telegram.allowFrom = $allow | .channels.telegram.accounts = $accounts | .channels.telegram.groups = {"*": {"requireMention": false}} | .bindings = $bindings' \
+      '.channels.telegram.enabled = true | .channels.telegram.groupPolicy = "open" | .channels.telegram.dmPolicy = "pairing" | .channels.telegram.allowFrom = $allow | .channels.telegram.accounts = $accounts | .channels.telegram.groups = {"*": {"requireMention": true}} | .bindings = $bindings' \
       "$STATE_DIR/openclaw.json" > "$STATE_DIR/openclaw.json.tmp" \
       && mv "$STATE_DIR/openclaw.json.tmp" "$STATE_DIR/openclaw.json"
   fi
