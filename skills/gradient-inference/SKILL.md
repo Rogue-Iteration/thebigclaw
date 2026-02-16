@@ -19,7 +19,7 @@ metadata:
         - requests>=2.31.0
         - beautifulsoup4>=4.12.0
   author: Rogue Iteration
-  version: "0.1.2"
+  version: "0.1.3"
   tags: ["digitalocean", "gradient-ai", "inferencing", "llm", "chat-completions", "image-generation"]
 ---
 

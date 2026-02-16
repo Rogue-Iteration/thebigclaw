@@ -87,16 +87,27 @@ def save_image(image_data: dict, output_path: str) -> dict:
     """Save a generated image to disk.
 
     Handles both URL-based and base64-encoded image responses.
+    The output path is validated to prevent path traversal attacks.
 
     Args:
         image_data: Image dict from generate_image() — has 'url' or 'b64_json'.
-        output_path: Where to save the file.
+        output_path: Where to save the file (must stay within cwd).
 
     Returns:
         dict with 'success', 'path', and 'message'.
     """
     try:
-        output = Path(output_path)
+        # Resolve to absolute path and validate against path traversal
+        cwd = Path.cwd().resolve()
+        output = (cwd / output_path).resolve()
+
+        if not str(output).startswith(str(cwd)):
+            return {
+                "success": False,
+                "path": "",
+                "message": f"Path traversal denied: '{output_path}' escapes working directory.",
+            }
+
         output.parent.mkdir(parents=True, exist_ok=True)
 
         if "b64_json" in image_data:
