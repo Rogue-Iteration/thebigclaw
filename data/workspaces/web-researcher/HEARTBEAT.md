@@ -9,7 +9,7 @@
    c. Evaluate findings — if anything is genuinely notable, prepare an alert
 3. **Check for inter-agent requests** — If Max sent a request via `sessions_send`, formulate a precise response (1 response only)
 4. **Optionally contact Max** — If your findings are significant enough to warrant his attention before his next heartbeat, send 1 request via `sessions_send`
-5. **Send alerts** — If any ticker produced notable findings, alert the user via Telegram
+5. **Send alerts** — If any ticker produced notable findings, **message the user directly** with your findings. Also notify Max so he can synthesize.
 
 ## Heartbeat Summary Format
 

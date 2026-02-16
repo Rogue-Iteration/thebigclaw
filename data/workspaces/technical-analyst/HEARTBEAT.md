@@ -9,7 +9,7 @@
    c. Evaluate signals — if any significant technical pattern is detected, prepare an alert
 3. **Check for inter-agent requests** — If Max sent a request via `sessions_send`, provide a precise technical analysis response (1 response only)
 4. **Optionally contact Max** — If your signals are significant enough to warrant his attention, send 1 request via `sessions_send`
-5. **Send alerts** — If any ticker produced significant technical signals, alert the user via Telegram
+5. **Send alerts** — If any ticker produced significant technical signals, **message the user directly** with the signal and your read. Also notify Max so he can add fundamental context.
 
 ## Heartbeat Summary Format
 

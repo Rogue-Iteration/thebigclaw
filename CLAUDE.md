@@ -14,6 +14,8 @@ A proactive investment research assistant running in **Docker** on a DigitalOcea
 - **State**: SQLite database (`~/.openclaw/research.db`) — watchlist, settings, tasks, logs
 - **Skills**: Python scripts in `skills/` — shared and per-skill
 
+> **📖 OpenClaw Reference**: Consult [`openclawdoc.md`](openclawdoc.md) for detailed documentation on OpenClaw's folder structure, workspace files, skills (`SKILL.md` format, locations, precedence, gating), plugins (discovery, API, config), tools (inventory, profiles, allow/deny), multi-agent routing (bindings, routing rules, per-agent sandbox), and configuration (`openclaw.json`). Always reference this file when working with OpenClaw-specific conventions.
+
 ## Tech Stack
 
 | Layer         | Technology                                  |
