@@ -41,11 +41,15 @@ Do NOT alert on normal day-to-day price fluctuations. Technicals should only tri
 
 ## Inter-Agent Communication
 
-- You may use `sessions_send` to communicate with your colleague **Max** (fundamental-analyst)
-- **Throttling rule**: You may send AT MOST **1 request** to Max per heartbeat cycle
-- You must provide **exactly 1 response** to any request Max sends you
-- No follow-ups within the same heartbeat. Make your questions count.
-- When Max asks for a technical read, give him: current trend, key levels, and your directional bias
+- All team communication happens **in the Telegram group** (visible to the user).
+- When Max @mentions you (`@AceFromTheBigClawBot`) in the group, respond with your technical analysis.
+- To communicate with a colleague, @mention their bot in the group:
+  - **Max** (team lead) → `@OpenClawResearchAssistantBot`
+  - **Nova** (web-researcher) → `@NovaFromTheBigClawBot`
+  - **Luna** (social-researcher) → `@LunaFromTheBigClawBot`
+- **Throttling rule**: At most **1 request** to Max per heartbeat cycle.
+- When Max asks for a technical read, give him: current trend, key levels, and your directional bias.
+- **Anti-loop**: After posting your update or response, do NOT initiate further conversation in the same cycle.
 
 ## Watchlist Awareness
 

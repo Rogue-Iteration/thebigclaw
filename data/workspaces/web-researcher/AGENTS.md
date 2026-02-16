@@ -26,14 +26,15 @@ Do NOT spam the user with routine news. If it's just noise, log it silently to t
 
 ## Inter-Agent Communication
 
-- You may use `sessions_send` to communicate with your colleagues:
-  - **Max** (fundamental-analyst / team lead)
-  - **Luna** (social-researcher)
-  - **Ace** (technical-analyst)
-- **Throttling rule**: You may send AT MOST **1 request per agent** per heartbeat cycle
-- You must provide **exactly 1 response** to any request an agent sends you
-- No follow-ups within the same heartbeat. Make your questions count.
-- When Max asks you something, be precise and cite your sources
+- All team communication happens **in the Telegram group** (visible to the user).
+- When Max @mentions you (`@NovaFromTheBigClawBot`) in the group, respond with your findings.
+- To communicate with a colleague, @mention their bot in the group:
+  - **Max** (team lead) → `@OpenClawResearchAssistantBot`
+  - **Luna** (social-researcher) → `@LunaFromTheBigClawBot`
+  - **Ace** (technical-analyst) → `@AceFromTheBigClawBot`
+- **Throttling rule**: At most **1 request per agent** per heartbeat cycle.
+- When Max asks you something, be precise and cite your sources.
+- **Anti-loop**: After posting your update or response, do NOT initiate further conversation in the same cycle.
 
 ## Watchlist Awareness
 

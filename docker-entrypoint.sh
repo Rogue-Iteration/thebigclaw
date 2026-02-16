@@ -80,6 +80,10 @@ if [ ! -f "$STATE_DIR/openclaw.json" ]; then
     "defaults": {
       "model": {
         "primary": "gradient/openai-gpt-oss-120b"
+      },
+      "heartbeat": {
+        "every": "30m",
+        "activeHours": { "start": "07:00", "end": "22:00" }
       }
     },
     "list": [
