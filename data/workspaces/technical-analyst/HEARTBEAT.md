@@ -2,6 +2,9 @@
 
 ## Cycle Steps
 
+0. **Check scheduled updates** — Run `python3 /app/skills/gradient-research-assistant/scripts/schedule.py --check --agent ace` to see if any scheduled reports are due (includes team-wide `all` schedules). If any are due:
+   a. Execute the prompt — report from your domain (technical signals, chart setups, key levels)
+   b. After completing each, mark it as run: `python3 /app/skills/gradient-research-assistant/scripts/schedule.py --mark-run {id} --agent ace`
 1. **Load watchlist** — Run `python3 /app/skills/gradient-research-assistant/scripts/manage_watchlist.py --show` for current tickers, themes, and directives
 2. **For each ticker on the watchlist**:
    a. Run `gather_technicals.py` with the ticker symbol and company name

@@ -113,14 +113,20 @@ python3 /app/skills/gradient-inference/scripts/gradient_models.py --filter llama
 Create, list, update, and delete scheduled reports (morning briefings, afternoon updates, evening wraps).
 
 ```bash
-# Add a new schedule
+# Add a schedule for yourself
 python3 /app/skills/gradient-research-assistant/scripts/schedule.py --add --name "Afternoon Update" --time 15:30 --days 1-5 --agent max --prompt "Deliver an afternoon team update"
+
+# Add a TEAM schedule (all agents respond from their domain)
+python3 /app/skills/gradient-research-assistant/scripts/schedule.py --add --name "Team Update" --time 16:00 --days 1-5 --agent all --prompt "Deliver an afternoon update from your domain"
 
 # List all schedules
 python3 /app/skills/gradient-research-assistant/scripts/schedule.py --list
 
-# Check what's due now
-python3 /app/skills/gradient-research-assistant/scripts/schedule.py --check
+# Check what's due for you (includes team-wide "all" schedules)
+python3 /app/skills/gradient-research-assistant/scripts/schedule.py --check --agent max
+
+# Mark as run (pass --agent for team schedules)
+python3 /app/skills/gradient-research-assistant/scripts/schedule.py --mark-run 1 --agent max
 
 # Reschedule or pause
 python3 /app/skills/gradient-research-assistant/scripts/schedule.py --update 1 --time 16:00

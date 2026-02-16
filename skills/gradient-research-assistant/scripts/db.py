@@ -139,6 +139,17 @@ CREATE TABLE IF NOT EXISTS scheduled_updates (
     last_run_at TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+-- Per-agent run tracking for 'all' schedules.
+-- When agent='all', each agent marks their own run independently.
+CREATE TABLE IF NOT EXISTS schedule_agent_runs (
+    schedule_id INTEGER NOT NULL,
+    agent TEXT NOT NULL,
+    run_date TEXT NOT NULL,
+    run_at TEXT NOT NULL,
+    PRIMARY KEY (schedule_id, agent, run_date),
+    FOREIGN KEY (schedule_id) REFERENCES scheduled_updates(id) ON DELETE CASCADE
+);
 """
 
 # Default alert rules (seeded on first init)
@@ -399,7 +410,7 @@ def main():
 
     if args.status:
         init_db(conn)  # ensure tables exist
-        tables = ["watchlist", "settings", "research_tasks", "agent_data", "research_log", "scheduled_updates"]
+        tables = ["watchlist", "settings", "research_tasks", "agent_data", "research_log", "scheduled_updates", "schedule_agent_runs"]
         print(f"📊 Database: {args.db}")
         for table in tables:
             count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]

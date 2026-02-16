@@ -33,7 +33,7 @@ from db import get_connection, get_setting, init_db, set_setting
 
 # ─── Constants ───────────────────────────────────────────────────
 
-VALID_AGENTS = {"max", "nova", "luna", "ace"}
+VALID_AGENTS = {"max", "nova", "luna", "ace", "all"}
 VALID_SCHEDULE_TYPES = {"daily", "weekly", "custom"}
 TIME_PATTERN = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
 
@@ -202,7 +202,7 @@ def create_schedule(
     if agent.lower() not in VALID_AGENTS:
         return {
             "success": False,
-            "message": f"Unknown agent '{agent}'. Valid: {', '.join(sorted(VALID_AGENTS))}",
+            "message": f"Unknown agent '{agent}'. Valid: {', '.join(sorted(VALID_AGENTS))} (use 'all' for team-wide)",
             "schedule_id": None,
         }
 
@@ -368,23 +368,47 @@ def delete_schedule(conn, schedule_id: int) -> dict:
     return {"success": True, "message": f"Deleted schedule #{schedule_id}."}
 
 
-def mark_run(conn, schedule_id: int) -> dict:
+def mark_run(conn, schedule_id: int, agent: Optional[str] = None) -> dict:
     """Mark a schedule as having just run.
+
+    For 'all' schedules, pass the agent name to track per-agent completion.
+    For single-agent schedules, uses the existing last_run_at column.
 
     Returns:
         dict with 'success' and 'message'.
     """
-    now = datetime.now(timezone.utc).isoformat()
-    cursor = conn.execute(
-        "UPDATE scheduled_updates SET last_run_at = ? WHERE id = ?",
-        (now, schedule_id),
-    )
-    conn.commit()
-
-    if cursor.rowcount == 0:
+    schedule = get_schedule(conn, schedule_id)
+    if schedule is None:
         return {"success": False, "message": f"Schedule #{schedule_id} not found."}
 
-    return {"success": True, "message": f"Marked schedule #{schedule_id} as run."}
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+
+    if schedule["agent"] == "all" and agent:
+        # Per-agent tracking for team schedules
+        tz_name = get_user_timezone(conn)
+        try:
+            user_tz = ZoneInfo(tz_name)
+        except (KeyError, Exception):
+            user_tz = ZoneInfo("UTC")
+        today_str = now.astimezone(user_tz).strftime("%Y-%m-%d")
+
+        conn.execute(
+            """INSERT OR REPLACE INTO schedule_agent_runs
+               (schedule_id, agent, run_date, run_at)
+               VALUES (?, ?, ?, ?)""",
+            (schedule_id, agent.lower(), today_str, now_iso),
+        )
+        conn.commit()
+        return {"success": True, "message": f"Marked schedule #{schedule_id} as run by {agent}."}
+    else:
+        # Single-agent: use existing last_run_at
+        conn.execute(
+            "UPDATE scheduled_updates SET last_run_at = ? WHERE id = ?",
+            (now_iso, schedule_id),
+        )
+        conn.commit()
+        return {"success": True, "message": f"Marked schedule #{schedule_id} as run."}
 
 
 # ─── Due Check ───────────────────────────────────────────────────
@@ -399,7 +423,11 @@ def _python_weekday_to_schedule_day(python_weekday: int) -> int:
     return (python_weekday + 1) % 7
 
 
-def check_due_schedules(conn, now: Optional[datetime] = None) -> list[dict]:
+def check_due_schedules(
+    conn,
+    now: Optional[datetime] = None,
+    agent: Optional[str] = None,
+) -> list[dict]:
     """Check which schedules are due right now.
 
     A schedule is due when:
@@ -407,11 +435,14 @@ def check_due_schedules(conn, now: Optional[datetime] = None) -> list[dict]:
     2. The current day (in user's timezone) matches the schedule's days
     3. The current time (in user's timezone) is within 30 minutes after the
        scheduled time (to account for heartbeat intervals)
-    4. It hasn't already run today (based on last_run_at)
+    4. It hasn't already run today (based on last_run_at or per-agent tracking)
 
     Args:
         conn: Database connection
         now: Optional datetime override for testing. If None, uses current time.
+        agent: Optional agent name. When provided, returns schedules where
+               agent matches this name OR agent is 'all' (and this agent
+               hasn't run it today).
 
     Returns:
         List of schedule dicts that are due.
@@ -437,6 +468,12 @@ def check_due_schedules(conn, now: Optional[datetime] = None) -> list[dict]:
     due = []
 
     for sched in schedules:
+        # Filter by agent if specified
+        if agent:
+            sched_agent = sched["agent"]
+            if sched_agent != agent.lower() and sched_agent != "all":
+                continue
+
         # Check day match
         try:
             allowed_days = parse_days(sched["days"])
@@ -455,16 +492,27 @@ def check_due_schedules(conn, now: Optional[datetime] = None) -> list[dict]:
             continue
 
         # Check if already run today
-        if sched.get("last_run_at"):
-            try:
-                last_run = datetime.fromisoformat(sched["last_run_at"])
-                if last_run.tzinfo is None:
-                    last_run = last_run.replace(tzinfo=timezone.utc)
-                last_run_local = last_run.astimezone(user_tz)
-                if last_run_local.strftime("%Y-%m-%d") == today_str:
-                    continue
-            except (ValueError, TypeError):
-                pass
+        if sched["agent"] == "all" and agent:
+            # For 'all' schedules: check per-agent run tracking
+            row = conn.execute(
+                """SELECT 1 FROM schedule_agent_runs
+                   WHERE schedule_id = ? AND agent = ? AND run_date = ?""",
+                (sched["id"], agent.lower(), today_str),
+            ).fetchone()
+            if row is not None:
+                continue
+        else:
+            # For single-agent schedules: check last_run_at
+            if sched.get("last_run_at"):
+                try:
+                    last_run = datetime.fromisoformat(sched["last_run_at"])
+                    if last_run.tzinfo is None:
+                        last_run = last_run.replace(tzinfo=timezone.utc)
+                    last_run_local = last_run.astimezone(user_tz)
+                    if last_run_local.strftime("%Y-%m-%d") == today_str:
+                        continue
+                except (ValueError, TypeError):
+                    pass
 
         due.append(sched)
 
@@ -634,14 +682,14 @@ def main():
             sys.exit(1)
 
     elif args.check:
-        due = check_due_schedules(conn)
+        due = check_due_schedules(conn, agent=args.agent)
         if due:
             print(json.dumps(due, indent=2))
         else:
             print("No schedules due right now.")
 
     elif args.mark_run is not None:
-        result = mark_run(conn, args.mark_run)
+        result = mark_run(conn, args.mark_run, agent=args.agent)
         print(result["message"])
         if not result["success"]:
             sys.exit(1)
