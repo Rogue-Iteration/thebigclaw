@@ -22,7 +22,7 @@ metadata:
         - requests>=2.31.0
         - boto3>=1.34.0
   author: Rogue Iteration
-  version: "0.1.3"
+  version: "0.1.4"
   tags: ["digitalocean", "gradient-ai", "knowledge-base", "rag", "semantic-search", "do-spaces"]
 ---
 
@@ -59,6 +59,19 @@ Your Agent                   DigitalOcean
 
 📖 *[Knowledge Base docs](https://docs.digitalocean.com/products/gradient-ai-platform/how-to/create-manage-knowledge-bases/)*
 
+## API Endpoints
+
+This skill connects to three official DigitalOcean service endpoints:
+
+| Hostname | Purpose | Docs |
+|----------|---------|------|
+| `api.digitalocean.com` | KB management (create, list, delete, data sources) | [DO API Reference](https://docs.digitalocean.com/reference/api/) |
+| `kbaas.do-ai.run` | KB retrieval — semantic/hybrid search queries | [KB Retrieval docs](https://docs.digitalocean.com/products/gradient-ai-platform/how-to/create-manage-knowledge-bases/) |
+| `inference.do-ai.run` | LLM chat completions for RAG synthesis | [Inference docs](https://docs.digitalocean.com/products/gradient-ai-platform/how-to/use-serverless-inference/) |
+| `<region>.digitaloceanspaces.com` | S3-compatible object storage | [Spaces docs](https://docs.digitalocean.com/products/spaces/) |
+
+All endpoints are owned and operated by DigitalOcean. The `*.do-ai.run` hostnames are the Gradient AI Platform's service domains.
+
 ## Authentication
 
 This skill uses **two different credentials** — think of it as a two-claw approach:
@@ -66,7 +79,10 @@ This skill uses **two different credentials** — think of it as a two-claw appr
 | Credential | Used For | Env Var |
 |------------|----------|---------|
 | DO API Token | KB management, indexing, queries | `DO_API_TOKEN` |
+| Gradient API Key | LLM inference for RAG synthesis | `GRADIENT_API_KEY` |
 | Spaces Keys | S3-compatible uploads | `DO_SPACES_ACCESS_KEY` + `DO_SPACES_SECRET_KEY` |
+
+> **Credential scoping:** Use minimally-scoped tokens. Create a dedicated [Model Access Key](https://docs.digitalocean.com/products/gradient-ai-platform/how-to/manage-access-keys/) for `GRADIENT_API_KEY`. For `DO_API_TOKEN`, use a [scoped API token](https://docs.digitalocean.com/reference/api/create-personal-access-token/) with only Knowledge Base and Spaces permissions. Avoid using your account-root token.
 
 Optional but recommended:
 ```bash
