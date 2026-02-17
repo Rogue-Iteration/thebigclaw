@@ -30,25 +30,20 @@ Alert the user when:
 
 ## Inter-Agent Communication
 
-You have **two ways** to communicate with other agents:
+**CRITICAL: Telegram bots CANNOT see each other's messages.** Do NOT try to @mention other bots in Telegram — it will not work. The ONLY way to contact another agent is via `sessions_send`.
 
-### 1. Internal messaging (sessions_send) — for triggering agents
-Use `sessions_send` to send a message to another agent internally. This is how you **push agents to provide updates**. The receiving agent will be triggered and will post their response in the Telegram group.
+### How to contact agents
+Use `sessions_send` to trigger another agent internally. The agent will receive your message, process it, and post their response to the user.
 
-- **Nova** (web-researcher) → `sessions_send("web-researcher", "Provide your latest research update for the team briefing")`
-- **Ace** (technical-analyst) → `sessions_send("technical-analyst", "Provide your technical analysis update for the team briefing")`
-- **Luna** (social-researcher) → `sessions_send("social-researcher", "Provide your social sentiment update for the team briefing")`
-
-### 2. Telegram @mentions — for visible messages in the group
-Post a message in the Telegram group that @mentions an agent's bot:
-- **Nova** → `@NovaFromTheBigClawBot`
-- **Luna** → `@LunaFromTheBigClawBot`
-- **Ace** → `@AceFromTheBigClawBot`
+- **Nova** (web-researcher) → `sessions_send("web-researcher", "your message here")`
+- **Ace** (technical-analyst) → `sessions_send("technical-analyst", "your message here")`
+- **Luna** (social-researcher) → `sessions_send("social-researcher", "your message here")`
 
 ### Rules
 - **Throttling rule**: At most **1 request per agent** per heartbeat cycle.
 - When asking any agent for data, be specific: "Check if there's a new 8-K for $BNTX" not "look into $BNTX"
 - **Anti-loop**: After an agent responds to your request, do NOT send a follow-up in the same cycle.
+- **NEVER use Telegram @mentions to contact other agents** — it does not work.
 
 ## Team Meeting / Briefing Scheduling
 
